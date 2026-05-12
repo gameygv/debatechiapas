@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 250 80% 35%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 90% 50%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 280 70% 45%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 250 80% 35%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 250 80% 45%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 90% 60%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 280 70% 55%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 250 80% 45%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+  h1, h2, h3, h4, h5, h6 { @apply font-serif tracking-tight; }
+}
+
+.font-serif { font-family: 'Outfit', sans-serif; }
+.font-sans { font-family: 'Inter', sans-serif; }
+
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 30s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+.prose p { margin-bottom: 1.5em !important; margin-top: 1.5em !important; line-height: 1.8 !important; }
+
+/* 
+   SOLUCIÓN DEFINITIVA PARA TAMAÑOS DE IMAGEN
+   Forzamos al navegador a usar el width que TipTap guarda en el atributo 'style'.
+*/
+.prose img, .prose video {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* Si la imagen tiene un estilo inline de width (píxeles o %), respetarlo por sobre Tailwind */
+.prose img[style*="width"], .prose video[style*="width"] {
+  width: auto; /* Permite que el inline style tome el control */
+}
+
+/* Manejo de alineación guardada */
+.prose img[data-align="center"], .prose video[data-align="center"] {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.prose img[data-align="right"], .prose video[data-align="right"] {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+.prose img[data-align="left"], .prose video[data-align="left"] {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+.prose video { pointer-events: auto !important; }

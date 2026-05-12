@@ -1,0 +1,30 @@
+{
+  "rewrites": [
+    {
+      "source": "/noticias/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Discordbot|Slackbot|TelegramBot|Applebot|Googlebot).*"
+        }
+      ],
+      "destination": "/api/ssr?slug=:slug"
+    },
+    {
+      "source": "/s/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Discordbot|Slackbot|TelegramBot|Applebot|Googlebot).*"
+        }
+      ],
+      "destination": "/api/ssr?slug=:slug"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
