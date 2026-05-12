@@ -1,0 +1,72 @@
+session_id: "S-D-260512-0328"
+summary: "SES-S-D-260512-0328: Bootstrap completo debatechiapas — repo, Supabase, Vercel, DNS, RaiSE onboarding"
+type: infrastructure
+outcomes:
+  - "Repo GitHub gameygv/debatechiapas creado y publicado con código base de MoyMontesBlog"
+  - "Stack Supabase self-hosted levantado en supabase.poesis.net (9 containers, DB healthy, REST API funcional)"
+  - "DNS configurado: debatechiapas.dockerapps.top (CNAME Vercel) + debatechiapas.supabase.poesis.net (A record BIND)"
+  - "Vercel desplegado en producción con dominio personalizado y auto-deploy desde GitHub"
+  - "Rebranding completado: URLs, credenciales, textos, OG tags, edge functions actualizados"
+  - "RaiSE inicializado: rai init + graph build (192 conceptos) + 6 docs governance"
+patterns:
+  - description: "Stacks Supabase nuevos en supabase-poesis necesitan ALTER USER manual para service roles después del primer docker compose up"
+    context: "supabase,self-hosted,postgres,roles"
+    type: process
+  - description: "DNS de *.supabase.poesis.net se gestiona en BIND en da-poesis (/var/named/poesis.net.db), no en Cloudflare"
+    context: "dns,poesis,bind,directadmin"
+    type: infrastructure
+  - description: "Edge functions necesitan directorio volumes/functions/main/ con index.ts stub para que el container no crashloop"
+    context: "supabase,edge-functions,docker"
+    type: process
+corrections: []
+coaching:
+  trust_level: "established"
+  autonomy: "high — autonomous execution of infrastructure setup"
+  relationship:
+    quality: "productive"
+    trajectory: "stable"
+current_work:
+  epic: ""
+  story: ""
+  phase: "onboarded"
+  branch: main
+pending:
+  decisions: []
+  blockers: []
+  next_actions:
+    - "E2: Migrar schema de BD (tablas, RLS, storage buckets, triggers) desde MoyMontes"
+    - "E1: Rebranding visual (logo, header, footer, favicon, colores, redes sociales)"
+    - "E3: Deploy edge functions al stack + configurar env vars (OpenRouter, Fal.ai, Make.com)"
+    - "E4: Seed data (secciones, tags, usuario admin, banners, artículo de prueba)"
+narrative: |
+  ## Decisiones
+  - Fork de MoyMontesBlog como base (no greenfield) — acelera el time-to-market
+  - Supabase self-hosted en supabase.poesis.net (VPS dedicado, no easypanel)
+  - Dominio debatechiapas.dockerapps.top en Vercel, Supabase API en debatechiapas.supabase.poesis.net
+  - Credenciales generadas fresh (JWT, ANON_KEY, SERVICE_ROLE_KEY, passwords) — no reutilizar de moymontes
+
+  ## Infraestructura creada
+  - GitHub: gameygv/debatechiapas (público)
+  - Cloudflare: CNAME debatechiapas.dockerapps.top → cname.vercel-dns.com (zona dockerapps.top)
+  - BIND/DA: A record debatechiapas.supabase.poesis.net → 23.189.168.140 (/var/named/poesis.net.db en da-poesis)
+  - Supabase: /opt/supabase/debatechiapas/ con docker-compose, .env, kong.yml, volumes/
+  - Vercel: proyecto debatechiapas linkeado a GitHub, dominio custom, auto-deploy
+
+  ## Artefactos
+  - /opt/supabase/debatechiapas/.env — credenciales del stack
+  - /opt/supabase/debatechiapas/volumes/kong/kong.yml — API gateway config
+  - governance/ — 6 documentos (vision, prd, guardrails, backlog, system-context, system-design)
+  - .raise/ — RaiSE inicializado con 192 conceptos en graph
+
+  ## Estado del Branch
+  - Branch: main, 2 commits, sincronizado con origin
+  - Commit 1: eb5a562 — proyecto inicial
+  - Commit 2: f2443fb — RaiSE onboarding + governance + rebranding
+next_session_prompt: |
+  Proyecto debatechiapas bootstrapped pero sin datos. Prioridad:
+  1. E2 (schema) es bloqueante — sin tablas el sitio no funciona. Migrar desde moymontes.
+  2. E3 (edge functions) depende de E2 para tablas pero env vars se pueden configurar antes.
+  3. E1 (rebranding visual) es paralelo, necesita assets del cliente.
+  4. Quedan imágenes de MoyMontes en public/ (HeaderMoyMontes.jpg, etc.) y links a redes sociales del perfil original.
+  5. Las edge functions rss y sitemap usan URL correcta pero generate-article tiene contexto político hardcodeado que puede necesitar ajuste.
+  Dashboard Supabase: https://debatechiapas.supabase.poesis.net (gamey / kPgtZ2i2tuVMjbPo)
