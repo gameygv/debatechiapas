@@ -1,0 +1,23 @@
+version: '1.0'
+project:
+  name: debatechiapas
+  project_type: brownfield
+  language: typescript
+  test_command: npx vitest run
+  lint_command: npx eslint .
+  type_check_command: npx tsc --noEmit
+  format_command: npx prettier --check .
+  code_file_count: 126
+  detected_at: '2026-05-12T09:28:17.865217Z'
+  apps: null
+branches:
+  development: main
+  main: main
+ide:
+  type: claude
+agents:
+  types:
+  - claude
+tier: null
+backlog: null
+graph: null

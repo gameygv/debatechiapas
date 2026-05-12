@@ -35,3 +35,6 @@ dist-ssr
 e2e-*.jpeg
 
 .vercel
+
+# RaiSE personal directory (per-developer, not shared)
+!.env.example

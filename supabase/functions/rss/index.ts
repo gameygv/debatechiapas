@@ -41,15 +41,15 @@ serve(async (req) => {
       .order('published_at', { ascending: false })
       .limit(20)
 
-    const baseUrl = 'https://www.moymontes.com'
+    const baseUrl = 'https://debatechiapas.dockerapps.top'
     const buildDate = new Date().toUTCString();
 
     let rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-  <title>Moy Montes - El Divo de Chiapas</title>
+  <title>Debate Chiapas</title>
   <link>${baseUrl}</link>
-  <description>Periodismo crítico, veraz y oportuno desde Chiapas para el mundo.</description>
+  <description>Debate y opinión desde Chiapas para el mundo.</description>
   <language>es-mx</language>
   <lastBuildDate>${buildDate}</lastBuildDate>
   <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml" />
@@ -77,7 +77,7 @@ serve(async (req) => {
     <link>${link}</link>
     <guid isPermaLink="true">${link}</guid>
     <pubDate>${pubDate}</pubDate>
-    <author>contacto@moymontes.com (${escapeXml(author)})</author>
+    <author>contacto@debatechiapas.dockerapps.top (${escapeXml(author)})</author>
     <category>${escapeXml(category)}</category>
     <description>${escapeXml(article.excerpt || '')}</description>
     ${mediaTag}

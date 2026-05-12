@@ -21,7 +21,7 @@ serve(async (req) => {
       .from('categories')
       .select('slug')
 
-    const baseUrl = 'https://www.moymontes.com'
+    const baseUrl = 'https://debatechiapas.dockerapps.top'
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
