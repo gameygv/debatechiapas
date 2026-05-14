@@ -116,6 +116,9 @@ const App = () => (
             <Route path="*" element={<div className="p-10">Página en construcción</div>} />
           </Route>
 
+          {/* Compatibilidad WordPress: /{slug}/ → /noticias/{slug} para links de redes sociales */}
+          <Route path="/:slug" element={<RedirectLegacyLink />} />
+
           {/* Catch-all: Redirige a Home en lugar de mostrar 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

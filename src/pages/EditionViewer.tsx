@@ -10,8 +10,9 @@ import { es } from 'date-fns/locale';
 import type { DbDailyEdition } from '@/lib/types';
 import HTMLFlipBook from 'react-pageflip';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 interface PageProps {
   pageImage: string;
@@ -31,6 +32,7 @@ const EditionViewer = () => {
   const [pages, setPages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingPdf, setLoadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const flipBookRef = useRef<any>(null);
@@ -82,8 +84,9 @@ const EditionViewer = () => {
       }
 
       setPages(pageImages);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading PDF:', err);
+      setPdfError(err?.message || 'Error al cargar el PDF');
     }
     setLoadingPdf(false);
   }, [isMobile]);
@@ -153,7 +156,14 @@ const EditionViewer = () => {
         </div>
 
         {/* Flipbook */}
-        {loadingPdf ? (
+        {pdfError ? (
+          <div className="text-center py-20">
+            <p className="text-red-400 mb-4">{pdfError}</p>
+            <a href={edition.pdf_url} target="_blank" rel="noopener noreferrer" className="text-[#fe4641] underline">
+              Descargar PDF directamente
+            </a>
+          </div>
+        ) : loadingPdf ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-[#fe4641]" />
             <p className="text-gray-400 font-sans">Cargando edicion...</p>

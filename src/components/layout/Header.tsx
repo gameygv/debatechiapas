@@ -65,7 +65,7 @@ const Header = () => {
           <img 
             src="/logo-debate.png"
             alt="Debate Chiapas"
-            className="w-full h-auto md:w-auto md:h-28 mx-auto transition-transform group-hover:scale-105 object-contain"
+            className="w-full h-auto max-w-2xl mx-auto transition-transform group-hover:scale-105 object-contain"
           />
         </Link>
 
