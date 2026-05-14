@@ -45,11 +45,30 @@ const queryClient = new QueryClient({
   },
 });
 
-// Componente auxiliar para redirigir enlaces cortos
+// Componente auxiliar para redirigir enlaces cortos y legacy de WordPress
 const RedirectLegacyLink = () => {
   const { slug } = useParams();
-  // Redirige /s/:slug -> /noticias/:slug
+  if (!slug) return <Navigate to="/" replace />;
+  const isEdition = slug.startsWith('debate-chiapas-') || slug.startsWith('periodico-debate');
+  if (isEdition) {
+    return <RedirectEditionBySlug slug={slug} />;
+  }
   return <Navigate to={`/noticias/${slug}`} replace />;
+};
+
+const RedirectEditionBySlug = ({ slug }: { slug: string }) => {
+  const [target, setTarget] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    import('./integrations/supabase/client').then(({ supabase }) => {
+      supabase.from('daily_editions').select('id').ilike('title', `%${slug.replace(/-/g, ' ').substring(0, 30)}%`).limit(1).maybeSingle()
+        .then(({ data }) => {
+          if (data) setTarget(`/edicion/${data.id}`);
+          else setTarget(`/noticias/${slug}`);
+        });
+    });
+  }, [slug]);
+  if (!target) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  return <Navigate to={target} replace />;
 };
 
 const App = () => (
