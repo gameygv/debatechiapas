@@ -112,9 +112,9 @@ const EditionViewer = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-5xl bg-white rounded-lg overflow-hidden shadow-2xl" style={{ height: 'calc(100vh - 250px)', minHeight: '500px' }}>
+        <div className="w-full max-w-6xl bg-white rounded-lg overflow-hidden shadow-2xl" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
           <iframe
-            src={edition.pdf_url}
+            src={`${edition.pdf_url}#zoom=page-width&view=FitH`}
             className="w-full h-full border-0"
             title={edition.title}
           />
