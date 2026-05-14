@@ -136,6 +136,18 @@ const Header = () => {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                to="/ediciones"
+                className={`text-sm font-sans font-semibold tracking-wide uppercase px-4 py-3 inline-flex items-center gap-1.5 transition-colors ${
+                  location.pathname === '/ediciones'
+                    ? 'text-white bg-[#fe4641]'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Ediciones PDF
+              </Link>
+            </li>
             {hiddenSections.length > 0 && (
               <li>
                 <DropdownMenu>
@@ -189,6 +201,10 @@ const Header = () => {
                     {section.name}
                   </Link>
                 ))}
+                <Link to="/ediciones" className="text-lg font-semibold text-gray-800 flex items-center gap-2 mt-4 pt-4 border-t border-gray-200"
+                  onClick={() => document.body.click()}>
+                  Ediciones PDF
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
