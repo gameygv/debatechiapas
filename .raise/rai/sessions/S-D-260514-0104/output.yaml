@@ -1,0 +1,92 @@
+session_id: "S-D-260514-0104"
+summary: "SES-S-D-260514-0104: Personalización completa, migración WP, PDF viewer, deploy debatechiapas.com"
+type: feature
+outcomes:
+  - "Schema BD aplicado: 10 tablas, 2 funciones, 22 RLS policies, bucket media"
+  - "Rebranding visual: logo rojo full-width, colores #fe4641, Poppins, fondo gris, favicon correcto"
+  - "Feature edición diaria: visor PDF nativo con iframe, archivo de ediciones, admin CRUD"
+  - "Migración WP: 2,605 artículos + 104 ediciones diarias con PDFs a Supabase Storage"
+  - "12 edge functions desplegadas (main monolítico copiado de moymontes + URLs actualizadas)"
+  - "Dominio debatechiapas.com configurado en Vercel + DNS hostingwarlock"
+  - "Cards portrait aspect-[3/4] para imágenes verticales de periódico"
+  - "Redirect inteligente /{slug} detecta artículos vs ediciones diarias"
+  - "OG tags dinámicos por artículo via Helmet + SSR para crawlers sociales"
+  - "Tests Playwright: 20+ tests, homepage, artículo, ediciones, PDF, búsqueda, mobile, login"
+  - "Usuario admin creado via GoTrue API (no SQL manual)"
+patterns:
+  - description: "Crear usuarios auth en Supabase self-hosted siempre via GoTrue admin API, nunca INSERT directo en auth.users — faltan campos nullable que GoTrue llena"
+    context: "supabase,auth,gotrue,self-hosted"
+    type: process
+  - description: "pdfjs-dist v5 renderizando 24 páginas a canvas es demasiado lento en cliente; iframe con visor nativo del navegador es instantáneo"
+    context: "pdf,pdfjs,performance,browser"
+    type: technical
+  - description: "React.lazy requiere import React explícito en Vite con JSX automático — sin él produce página en blanco sin errores de consola"
+    context: "react,vite,lazy,import"
+    type: technical
+  - description: "DNS en cPanel con PowerDNS: editar zona en /var/named/ y reiniciar pdns via /scripts/restartsrv_named"
+    context: "dns,cpanel,powerdns,hostingwarlock"
+    type: infrastructure
+corrections: []
+coaching:
+  trust_level: "established"
+  autonomy: "high — autonomous execution of 7 phases"
+  relationship:
+    quality: "productive"
+    trajectory: "stable"
+current_work:
+  epic: "E1-E5"
+  story: ""
+  phase: "deployed"
+  branch: main
+pending:
+  decisions: []
+  blockers: []
+  next_actions:
+    - "Verificar propagación DNS completa de debatechiapas.com (TTL 3600s)"
+    - "Monitorear que el WP en hostingwarlock ya no reciba tráfico"
+    - "Agregar más categorías (Chiapas, Deportes, etc.) y reclasificar artículos"
+    - "Configurar env vars de edge functions (OPENROUTER_API_KEY, FAL_KEY, MAKE_WEBHOOK_URL)"
+    - "Investigar malware mu-plugin 0yTwGq.php en el WP original"
+narrative: |
+  ## Decisiones
+  - Visor PDF: iframe nativo vs pdfjs flipbook 3D — optamos por iframe después de que pdfjs no cargaba PDFs de 24 páginas
+  - Header: rediseñado completamente para igualar el WP original (logo rojo full-width, barra búsqueda, nav compacta)
+  - Cards: estilo similar al WP original (imagen portrait 3/4, título, categoría verde, "Leer más" rojo)
+  - Redirect /{slug}: componente inteligente que consulta daily_editions para detectar ediciones vs artículos
+  - Usuarios auth: creación via GoTrue admin API (INSERT directo en auth.users falla por campos NULL)
+  - Dominio: DNS cambiado en hostingwarlock PowerDNS (A record 64.20.41.54 → 76.76.21.21)
+
+  ## Infraestructura
+  - Supabase: 10 tablas, 2 funciones, 22 RLS policies, bucket media (52MB limit)
+  - Vercel: dominio debatechiapas.com + debatechiapas.dockerapps.top (legacy)
+  - DNS: A record en hostingwarlock apuntando a Vercel (76.76.21.21)
+  - Edge functions: 12 funciones en main/index.ts monolítico
+
+  ## Artefactos
+  - scripts/schema.sql — schema completo de la BD
+  - scripts/migrate-wp.mjs — script de migración WordPress → Supabase
+  - src/components/DailyEdition.tsx — sección homepage edición del día
+  - src/pages/EditionViewer.tsx — visor PDF con iframe
+  - src/pages/EditionArchive.tsx — archivo de ediciones
+  - src/pages/admin/DailyEditions.tsx — admin CRUD ediciones
+  - tests/exhaustive-review.spec.ts — suite de tests Playwright
+  - playwright.config.ts — configuración Playwright
+
+  ## Datos migrados
+  - 2,605 artículos publicados (ene-may 2026)
+  - 104 ediciones diarias con PDFs
+  - 1 categoría (General)
+  - Todas las imágenes copiadas a Supabase Storage
+
+  ## Branch State
+  - Branch: main, 10 commits en esta sesión
+  - Último commit: 971de19 (test: revisión exhaustiva)
+next_session_prompt: |
+  Sitio debatechiapas.com LIVE con contenido migrado.
+  1. Verificar propagación DNS completa (puede tomar hasta 24h para algunos ISPs)
+  2. Configurar env vars para edge functions IA (OPENROUTER_API_KEY, FAL_KEY, MAKE_WEBHOOK_URL)
+  3. Agregar más categorías y reclasificar los 2,605 artículos (actualmente todos en "General")
+  4. Considerar deshabilitar el WP en hostingwarlock o mantenerlo como backup
+  5. Investigar/eliminar malware 0yTwGq.php en el WP
+  6. Credenciales admin: gameygv@gmail.com / DebateChiapas2026! (superuser)
+  Dashboard Supabase: https://debatechiapas.supabase.poesis.net
