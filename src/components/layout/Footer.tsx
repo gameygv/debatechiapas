@@ -29,11 +29,11 @@ const Footer = () => {
     }, []);
 
     return (
-        <footer className="bg-[#002244] text-white border-t border-[#FF7A59]/30 mt-8">
+        <footer className="bg-[#252525] text-white border-t border-[#fe4641]/30 mt-8">
             {/* Logo Strip */}
             <div className="w-full border-b border-white/10 py-6 bg-[#ffffff]">
                 <img
-                    src="/FooterMoyMontes.jpg"
+                    src="/logo-debate.png"
                     alt="Debate Chiapas"
                     className="h-32 md:h-40 w-auto mx-auto object-contain" />
             </div>
@@ -42,7 +42,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                     {/* Brand Column */}
                     <div className="space-y-4">
-                        <h2 className="font-serif text-2xl font-bold text-[#FF7A59]">Debate Chiapas</h2>
+                        <h2 className="font-serif text-2xl font-bold text-[#fe4641]">Debate Chiapas</h2>
                         <p className="text-sm text-gray-300 leading-relaxed font-sans">
                             Periodismo independiente, crítico y veraz desde el corazón del sureste mexicano. Debate Chiapas.
                         </p>
@@ -51,21 +51,21 @@ const Footer = () => {
                                 href="https://www.facebook.com/MoyMontes"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-white hover:text-[#FF7A59] transition-colors">
+                                className="text-white hover:text-[#fe4641] transition-colors">
                                 <Facebook size={20} />
                             </a>
                             <a
                                 href="https://www.instagram.com/moymontess/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-white hover:text-[#FF7A59] transition-colors">
+                                className="text-white hover:text-[#fe4641] transition-colors">
                                 <Instagram size={20} />
                             </a>
                             <a
                                 href="https://www.tiktok.com/@eldivodechiapas"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-white hover:text-[#FF7A59] transition-colors">
+                                className="text-white hover:text-[#fe4641] transition-colors">
                                 {/* Custom TikTok Icon */}
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -85,13 +85,13 @@ const Footer = () => {
 
                     {/* Sections Column */}
                     <div>
-                        <h3 className="font-serif text-lg font-semibold mb-4 text-[#FF7A59]">Secciones</h3>
+                        <h3 className="font-serif text-lg font-semibold mb-4 text-[#fe4641]">Secciones</h3>
                         <ul className="space-y-2 font-sans text-sm">
                             {categories.map(cat => (
                                 <li key={cat.id}>
                                     <Link
                                         to={`/categoria/${cat.slug}`}
-                                        className="text-gray-300 hover:text-[#FF7A59] transition-colors hover:underline uppercase tracking-wide">
+                                        className="text-gray-300 hover:text-[#fe4641] transition-colors hover:underline uppercase tracking-wide">
                                         {cat.name}
                                     </Link>
                                 </li>
@@ -101,12 +101,12 @@ const Footer = () => {
 
                     {/* Institutional Column */}
                     <div>
-                        <h3 className="font-serif text-lg font-semibold mb-4 text-[#FF7A59]">Institucional</h3>
+                        <h3 className="font-serif text-lg font-semibold mb-4 text-[#fe4641]">Institucional</h3>
                         <ul className="space-y-2 font-sans text-sm text-gray-300">
-                            <li className="hover:text-[#FF7A59] transition-colors cursor-default">Quiénes Somos</li>
-                            <li className="hover:text-[#FF7A59] transition-colors cursor-default">Contacto</li>
-                            <li className="hover:text-[#FF7A59] transition-colors cursor-default">Publicidad</li>
-                            <li className="hover:text-[#FF7A59] transition-colors cursor-default">Aviso de Privacidad</li>
+                            <li className="hover:text-[#fe4641] transition-colors cursor-default">Quiénes Somos</li>
+                            <li className="hover:text-[#fe4641] transition-colors cursor-default">Contacto</li>
+                            <li className="hover:text-[#fe4641] transition-colors cursor-default">Publicidad</li>
+                            <li className="hover:text-[#fe4641] transition-colors cursor-default">Aviso de Privacidad</li>
                         </ul>
                     </div>
                 </div>

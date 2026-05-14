@@ -22,9 +22,9 @@ const NewsTicker = () => {
   if (news.length === 0) return null;
 
   return (
-    <div className="bg-[#002244] text-white overflow-hidden py-3 border-b border-[#FF7A59]/30 relative">
+    <div className="bg-[#333333] text-white overflow-hidden py-3 border-b border-[#fe4641]/30 relative">
       <div className="container mx-auto px-4 flex items-center">
-        <div className="bg-[#FF7A59] text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded uppercase tracking-wider mr-4 z-10 whitespace-nowrap shadow-sm">
+        <div className="bg-[#fe4641] text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded uppercase tracking-wider mr-4 z-10 whitespace-nowrap shadow-sm">
           Última Hora
         </div>
         <div className="flex-1 overflow-hidden relative h-6">
@@ -33,9 +33,9 @@ const NewsTicker = () => {
               <Link 
                 key={item.id} 
                 to={`/noticias/${item.slug}`}
-                className="text-xs md:text-sm font-medium hover:text-[#FF7A59] transition-colors flex items-center gap-2"
+                className="text-xs md:text-sm font-medium hover:text-[#fe4641] transition-colors flex items-center gap-2"
               >
-                <span className="w-1.5 h-1.5 bg-[#FF7A59] rounded-full inline-block"></span>
+                <span className="w-1.5 h-1.5 bg-[#fe4641] rounded-full inline-block"></span>
                 {item.title}
               </Link>
             ))}
@@ -44,9 +44,9 @@ const NewsTicker = () => {
               <Link 
                 key={`dup-${item.id}`} 
                 to={`/noticias/${item.slug}`}
-                className="text-xs md:text-sm font-medium hover:text-[#FF7A59] transition-colors flex items-center gap-2"
+                className="text-xs md:text-sm font-medium hover:text-[#fe4641] transition-colors flex items-center gap-2"
               >
-                <span className="w-1.5 h-1.5 bg-[#FF7A59] rounded-full inline-block"></span>
+                <span className="w-1.5 h-1.5 bg-[#fe4641] rounded-full inline-block"></span>
                 {item.title}
               </Link>
             ))}

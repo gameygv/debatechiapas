@@ -63,9 +63,9 @@ const Header = () => {
       <div className="container mx-auto px-4 py-6 md:py-8 text-center relative">
         <Link to="/" className="inline-block group relative max-w-full">
           <img 
-            src="/HeaderMoyMontes.jpg" 
-            alt="Debate Chiapas" 
-            className="w-full h-auto md:w-auto md:h-80 mx-auto transition-transform group-hover:scale-105 object-contain rounded-xl shadow-sm"
+            src="/logo-debate.png"
+            alt="Debate Chiapas"
+            className="w-full h-auto md:w-auto md:h-28 mx-auto transition-transform group-hover:scale-105 object-contain"
           />
         </Link>
 
@@ -75,7 +75,7 @@ const Header = () => {
             href="https://www.facebook.com/MoyMontes"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-[#FF7A59] transition-colors transform hover:scale-110 duration-200"
+            className="text-gray-600 hover:text-[#fe4641] transition-colors transform hover:scale-110 duration-200"
             title="Facebook"
           >
             <Facebook size={24} />
@@ -84,7 +84,7 @@ const Header = () => {
             href="https://www.instagram.com/moymontess/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-[#FF7A59] transition-colors transform hover:scale-110 duration-200"
+            className="text-gray-600 hover:text-[#fe4641] transition-colors transform hover:scale-110 duration-200"
             title="Instagram"
           >
             <Instagram size={24} />
@@ -93,7 +93,7 @@ const Header = () => {
             href="https://www.tiktok.com/@eldivodechiapas"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-[#FF7A59] transition-colors transform hover:scale-110 duration-200"
+            className="text-gray-600 hover:text-[#fe4641] transition-colors transform hover:scale-110 duration-200"
             title="TikTok"
           >
             <svg
@@ -143,7 +143,7 @@ const Header = () => {
                   <Link 
                     key={section.id} 
                     to={`/categoria/${section.slug}`}
-                    className="text-lg font-serif font-medium text-[#FF7A59]"
+                    className="text-lg font-serif font-medium text-[#fe4641]"
                     onClick={() => document.body.click()} 
                   >
                     {section.name}
@@ -156,7 +156,7 @@ const Header = () => {
       </div>
 
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex justify-center border-t border-b border-[#FF7A59]/30 bg-[#002244] shadow-md sticky top-0 z-50 min-h-[58px]">
+      <nav className="hidden md:flex justify-center border-t border-b border-[#fe4641]/30 bg-[#333333] shadow-md sticky top-0 z-50 min-h-[58px]">
         {showSearch ? (
           <div className="w-full max-w-3xl flex items-center px-4 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
             <form onSubmit={handleSearch} className="flex-1 flex gap-2 items-center">
@@ -190,8 +190,8 @@ const Header = () => {
                   to="/"
                   className={`text-base font-serif font-bold tracking-wider transition-all duration-300 uppercase px-2 py-1 rounded-sm flex items-center gap-1 ${
                     location.pathname === '/' 
-                      ? 'text-white border-b-2 border-[#FF7A59]' 
-                      : 'text-[#FF7A59] hover:text-white hover:scale-110'
+                      ? 'text-white border-b-2 border-[#fe4641]' 
+                      : 'text-[#fe4641] hover:text-white hover:scale-110'
                   }`}
                 >
                   <Home size={16} className="mb-0.5" /> INICIO
@@ -204,8 +204,8 @@ const Header = () => {
                     to={`/categoria/${section.slug}`}
                     className={`text-base font-serif font-bold tracking-wider transition-all duration-300 uppercase px-2 py-1 rounded-sm ${
                       location.pathname === `/categoria/${section.slug}` 
-                        ? 'text-white border-b-2 border-[#FF7A59]' 
-                        : 'text-[#FF7A59] hover:text-white hover:scale-110'
+                        ? 'text-white border-b-2 border-[#fe4641]' 
+                        : 'text-[#fe4641] hover:text-white hover:scale-110'
                     }`}
                   >
                     {section.name}
@@ -216,12 +216,12 @@ const Header = () => {
               {hiddenSections.length > 0 && (
                 <li>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1 text-base font-serif font-bold tracking-wider text-[#FF7A59] hover:text-white transition-all uppercase px-2 py-1 outline-none">
+                    <DropdownMenuTrigger className="flex items-center gap-1 text-base font-serif font-bold tracking-wider text-[#fe4641] hover:text-white transition-all uppercase px-2 py-1 outline-none">
                       MÁS <ChevronDown size={14} />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-[#002244] border-[#FF7A59]/30 text-white min-w-[200px]">
+                    <DropdownMenuContent className="bg-[#333333] border-[#fe4641]/30 text-white min-w-[200px]">
                       {hiddenSections.map((section) => (
-                        <DropdownMenuItem key={section.id} asChild className="focus:bg-[#FF7A59] focus:text-white cursor-pointer">
+                        <DropdownMenuItem key={section.id} asChild className="focus:bg-[#fe4641] focus:text-white cursor-pointer">
                           <Link 
                             to={`/categoria/${section.slug}`}
                             className="w-full block font-serif font-medium uppercase tracking-wide"
@@ -242,7 +242,7 @@ const Header = () => {
                 variant="ghost" 
                 size="icon" 
                 onClick={() => setShowSearch(true)}
-                className="text-[#FF7A59] hover:text-white hover:bg-white/10 transition-colors"
+                className="text-[#fe4641] hover:text-white hover:bg-white/10 transition-colors"
               >
                 <Search className="h-5 w-5" />
               </Button>

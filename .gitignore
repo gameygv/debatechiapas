@@ -38,3 +38,4 @@ e2e-*.jpeg
 
 # RaiSE personal directory (per-developer, not shared)
 !.env.example
+scripts/migration-data/

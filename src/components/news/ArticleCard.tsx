@@ -35,7 +35,7 @@ const ArticleCard = ({ article, variant = 'standard', className, showImage = tru
           <img 
             src={featuredImage} 
             alt={article.title}
-            className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full aspect-[3/4] max-h-[700px] object-cover transition-transform duration-700 group-hover:scale-105"
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x600?text=No+Image'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -91,7 +91,7 @@ const ArticleCard = ({ article, variant = 'standard', className, showImage = tru
   return (
     <Link to={`/noticias/${article.slug}`} className={cn("group block", className)}>
       {showImage && (
-        <div className="overflow-hidden rounded-lg mb-4 bg-muted aspect-[3/2] shadow-sm">
+        <div className="overflow-hidden rounded-lg mb-4 bg-muted aspect-[3/4] shadow-sm">
           <img 
             src={featuredImage} 
             alt={article.title}

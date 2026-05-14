@@ -15,7 +15,8 @@ import {
   Menu,
   LayoutTemplate,
   User,
-  HardDrive
+  HardDrive,
+  Newspaper
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -60,6 +61,7 @@ const AdminSidebar = ({ className, onClose }: AdminSidebarProps) => {
     { icon: Tags, label: 'Tags', href: '/admin/tags', roles: ['superuser'] },
     { icon: Image, label: 'Medios', href: '/admin/media', roles: ['superuser', 'editor'] },
     { icon: LayoutTemplate, label: 'Banners Home', href: '/admin/home-banners', roles: ['superuser', 'editor'] },
+    { icon: Newspaper, label: 'Edicion Diaria', href: '/admin/daily-editions', roles: ['superuser', 'editor'] },
     { icon: HardDrive, label: 'Mantenimiento', href: '/admin/orphans', roles: ['superuser'] },
     { icon: Sparkles, label: 'Noticias IA', href: '/admin/news-ai', roles: ['superuser'] },
     { icon: Users, label: 'Usuarios', href: '/admin/users', roles: ['superuser'] },

@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import HomeBanners from '@/components/HomeBanners';
+import DailyEdition from '@/components/DailyEdition';
 import AdBlock from '@/components/AdBlock';
 import { toast } from 'sonner';
 import type { ArticleListItem } from '@/lib/types';
@@ -161,7 +162,7 @@ const Index = () => {
               {articles.map((article) => (
                 <article key={article.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
                   <Link to={`/noticias/${article.slug}`} className="block h-full flex flex-col">
-                    <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                    <div className="aspect-[3/4] overflow-hidden bg-gray-100">
                       {article.featuredImage ? (
                         <img 
                           src={article.featuredImage} 
@@ -235,6 +236,9 @@ const Index = () => {
           </>
         )}
         
+        {/* Daily Edition */}
+        {!slug && <DailyEdition />}
+
         {/* Ad Block before Banners/Footer */}
         <AdBlock className="my-8" position="home" />
 

@@ -87,6 +87,18 @@ export interface DbHomeBanner {
   created_at: string;
 }
 
+export interface DbDailyEdition {
+  id: string;
+  title: string;
+  edition_date: string;
+  pdf_url: string;
+  cover_image_url: string | null;
+  page_count: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // === Joined/nested types (from Supabase select with relations) ===
 
 export interface ArticleWithRelations extends DbArticle {

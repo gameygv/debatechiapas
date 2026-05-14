@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Valores por defecto (Fallback seguro)
     let title = "Debate Chiapas";
     let description = "Debate y opinión desde Chiapas para el mundo.";
-    let image = "https://debatechiapas.dockerapps.top/MoyMontesSquared.jpg";
+    let image = "https://debatechiapas.dockerapps.top/debate-og.jpg";
     const canonicalUrl = `https://debatechiapas.dockerapps.top/noticias/${slug}`;
 
     if (slug && typeof slug === 'string') {

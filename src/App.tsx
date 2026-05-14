@@ -29,6 +29,11 @@ import HomeBanners from "./pages/admin/HomeBanners";
 import Profile from "./pages/admin/Profile";
 import OrphanCleaner from "./pages/admin/OrphanCleaner";
 
+// Edition Pages (lazy for bundle splitting - pdfjs is heavy)
+import EditionArchive from "./pages/EditionArchive";
+import DailyEditions from "./pages/admin/DailyEditions";
+const EditionViewer = React.lazy(() => import("./pages/EditionViewer"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -63,13 +68,13 @@ const App = () => (
           <meta property="og:title" content="Debate Chiapas" />
           <meta property="og:description" content="Noticias, política y análisis desde el sureste mexicano." />
           {/* Absolute URL is critical for WhatsApp/Facebook */}
-          <meta property="og:image" content="https://debatechiapas.dockerapps.top/MoyMontesSquared.jpg" />
+          <meta property="og:image" content="https://debatechiapas.dockerapps.top/debate-og.jpg" />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://debatechiapas.dockerapps.top/" />
           
           {/* Default Twitter */}
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:image" content="https://debatechiapas.dockerapps.top/MoyMontesSquared.jpg" />
+          <meta name="twitter:image" content="https://debatechiapas.dockerapps.top/debate-og.jpg" />
         </Helmet>
 
         <Routes>
@@ -83,6 +88,12 @@ const App = () => (
           
           <Route path="/categoria/:slug" element={<Index />} />
           <Route path="/buscar" element={<SearchResults />} />
+          <Route path="/ediciones" element={<EditionArchive />} />
+          <Route path="/edicion/:id" element={
+            <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+              <EditionViewer />
+            </React.Suspense>
+          } />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -99,6 +110,7 @@ const App = () => (
             <Route path="news-ai" element={<NewsAI />} />
             <Route path="ads" element={<Ads />} />
             <Route path="home-banners" element={<HomeBanners />} />
+            <Route path="daily-editions" element={<DailyEditions />} />
             <Route path="settings" element={<Integrations />} />
             <Route path="*" element={<div className="p-10">Página en construcción</div>} />
           </Route>
