@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
-Sitemap: https://debatechiapas.dockerapps.top/sitemap.xml
+Sitemap: https://debatechiapas.com/sitemap.xml

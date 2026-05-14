@@ -8,6 +8,7 @@ import { SITE_URL } from '@/lib/constants';
 import { ArticleDetailSkeleton } from '@/components/ArticleSkeleton';
 import { Button } from '@/components/ui/button';
 import { Calendar, Facebook, Link as LinkIcon, ArrowRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -147,6 +148,19 @@ const ArticleDetail = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-serif">
+      <Helmet>
+        <title>{article.title} - Debate Chiapas</title>
+        <meta name="description" content={article.excerpt || article.title} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.excerpt || article.title} />
+        <meta property="og:image" content={article.featured_image || `${SITE_URL}/debate-og.jpg`} />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={article.excerpt || article.title} />
+        <meta name="twitter:image" content={article.featured_image || `${SITE_URL}/debate-og.jpg`} />
+      </Helmet>
       <Header />
 
       <main className="flex-grow">
@@ -187,9 +201,9 @@ const ArticleDetail = () => {
           <div className="container mx-auto px-4 mb-12 max-w-5xl">
             <div className="w-full overflow-hidden shadow-sm rounded-lg">
               <img 
-                src={article.featured_image} 
-                alt={article.title} 
-                className="w-full h-auto object-cover max-h-[600px]"
+                src={article.featured_image}
+                alt={article.title}
+                className="w-full h-auto object-contain"
               />
             </div>
           </div>
@@ -244,7 +258,7 @@ const ArticleDetail = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {relatedArticles.map((rel) => (
                     <Link key={rel.id} to={`/noticias/${rel.slug}`} className="group block">
-                      <div className="aspect-video rounded-md overflow-hidden bg-gray-100 mb-3">
+                      <div className="aspect-[3/4] rounded-md overflow-hidden bg-gray-100 mb-3">
                         <img 
                           src={rel.featured_image || '/placeholder.svg'} 
                           alt={rel.title}

@@ -15,8 +15,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Valores por defecto (Fallback seguro)
     let title = "Debate Chiapas";
     let description = "Debate y opinión desde Chiapas para el mundo.";
-    let image = "https://debatechiapas.dockerapps.top/debate-og.jpg";
-    const canonicalUrl = `https://debatechiapas.dockerapps.top/noticias/${slug}`;
+    let image = "https://debatechiapas.com/debate-og.jpg";
+    const canonicalUrl = `https://debatechiapas.com/noticias/${slug}`;
 
     if (slug && typeof slug === 'string') {
       // Consultar artículo en Supabase
@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Asegurar URL absoluta
           image = article.featured_image.startsWith('http') 
             ? article.featured_image 
-            : `https://debatechiapas.dockerapps.top${article.featured_image}`;
+            : `https://debatechiapas.com${article.featured_image}`;
         }
       }
     }

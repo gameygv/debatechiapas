@@ -69,13 +69,13 @@ const App = () => (
           <meta property="og:title" content="Debate Chiapas" />
           <meta property="og:description" content="Noticias, política y análisis desde el sureste mexicano." />
           {/* Absolute URL is critical for WhatsApp/Facebook */}
-          <meta property="og:image" content="https://debatechiapas.dockerapps.top/debate-og.jpg" />
+          <meta property="og:image" content="https://debatechiapas.com/debate-og.jpg" />
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://debatechiapas.dockerapps.top/" />
+          <meta property="og:url" content="https://debatechiapas.com/" />
           
           {/* Default Twitter */}
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:image" content="https://debatechiapas.dockerapps.top/debate-og.jpg" />
+          <meta name="twitter:image" content="https://debatechiapas.com/debate-og.jpg" />
         </Helmet>
 
         <Routes>
