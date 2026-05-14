@@ -125,7 +125,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9] font-serif flex flex-col">
+    <div className="min-h-screen bg-[#eaeaea] font-serif flex flex-col">
       <Header />
 
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12 max-w-[1400px]">
@@ -158,48 +158,42 @@ const Index = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-12">
               {articles.map((article) => (
-                <article key={article.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
-                  <Link to={`/noticias/${article.slug}`} className="block h-full flex flex-col">
-                    <div className="aspect-[3/4] overflow-hidden bg-gray-100">
+                <article key={article.id} className="bg-white shadow-sm overflow-hidden hover:shadow-lg transition-shadow group">
+                  <Link to={`/noticias/${article.slug}`} className="block">
+                    <div className="aspect-[3/4] overflow-hidden bg-gray-200">
                       {article.featuredImage ? (
-                        <img 
-                          src={article.featuredImage} 
+                        <img
+                          src={article.featuredImage}
                           alt={article.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Sin+Imagen'; }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x800?text=Sin+Imagen'; }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300">
                           <Newspaper className="h-12 w-12 text-gray-400" />
                         </div>
                       )}
                     </div>
-                    
-                    <div className="p-6 flex flex-col flex-grow">
-                      <div className="mb-3">
-                        <span className="inline-block px-3 py-1 text-xs font-bold tracking-widest uppercase bg-primary/10 text-primary rounded-full">
-                          {article.category.name}
-                        </span>
-                      </div>
-                      
-                      <h2 className="text-xl font-bold leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-3">
+
+                    <div className="p-4">
+                      <h2 className="text-base font-bold leading-snug mb-2 group-hover:text-[#fe4641] transition-colors line-clamp-3 font-sans">
                         {article.title}
                       </h2>
-                      
-                      {article.excerpt && (
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 font-sans flex-grow">
-                          {article.excerpt}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center justify-between text-xs text-gray-500 font-sans mt-auto pt-4 border-t border-gray-100">
-                        <span>{format(new Date(article.publishedAt), "d 'de' MMMM, yyyy", { locale: es })}</span>
-                        <span className="text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                          Leer más →
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-[#4caf50] uppercase tracking-wide">
+                          {article.category.name}
+                        </span>
+                        <span className="text-xs text-gray-400 font-sans">
+                          {format(new Date(article.publishedAt), "MMM d, yyyy", { locale: es })}
                         </span>
                       </div>
+
+                      <span className="text-xs text-[#fe4641] font-semibold mt-2 inline-block group-hover:underline">
+                        Leer mas
+                      </span>
                     </div>
                   </Link>
                 </article>
