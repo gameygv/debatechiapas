@@ -9,7 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import * as pdfjsLib from 'pdfjs-dist';
 import type { DbDailyEdition } from '@/lib/types';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
 
 const DailyEditions = () => {
   const [editions, setEditions] = useState<DbDailyEdition[]>([]);
@@ -64,6 +70,21 @@ const DailyEditions = () => {
     setDialogOpen(true);
   };
 
+  const generateCoverFromPdf = async (pdfFile: File): Promise<Blob> => {
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d')!;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob!), 'image/jpeg', 0.85);
+    });
+  };
+
   const uploadFile = async (file: File, folder: string): Promise<string> => {
     const ext = file.name.split('.').pop();
     const filename = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -91,6 +112,12 @@ const DailyEditions = () => {
 
       if (pdfFile) {
         pdfUrl = await uploadFile(pdfFile, 'editions');
+        if (!coverFile && !existingCoverUrl) {
+          toast.info('Generando portada desde el PDF...');
+          const coverBlob = await generateCoverFromPdf(pdfFile);
+          const generatedFile = new File([coverBlob], 'cover.jpg', { type: 'image/jpeg' });
+          coverUrl = await uploadFile(generatedFile, 'editions/covers');
+        }
       }
       if (coverFile) {
         coverUrl = await uploadFile(coverFile, 'editions/covers');
