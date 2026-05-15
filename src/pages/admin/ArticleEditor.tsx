@@ -117,7 +117,13 @@ const ArticleEditor = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from('categories').select('id, name').order('name');
-      if (data) setCategories(data);
+      if (data) {
+        setCategories(data);
+        if (!id) {
+          const general = data.find(c => c.name.toLowerCase() === 'general');
+          if (general) setSelectedSections([general.id]);
+        }
+      }
     };
     fetchCategories();
   }, []);
