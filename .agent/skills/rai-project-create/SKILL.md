@@ -1,12 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-description: Set up governance for a new project. Use after rai init on a greenfield
-  project.
+description: 'Guide greenfield project setup through conversation. Fills governance
+  templates with project-specific content and builds the knowledge graph. Use after
+  rai init on a new project.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -77,7 +74,7 @@ All governance fields covered from conversation.
 
 ### Step 3: Write 6 Governance Docs
 
-Publish all docs via CLI following parser contracts exactly. Graph parsers use regex — format must match.
+Write all docs following parser contracts exactly. Graph parsers use regex — format must match.
 
 **Parser contracts (critical):**
 - `vision.md`: Outcomes table with `| **{Bold Name}** | {description} |`. Regex: `\|\s*\*\*([^*]+)\*\*\s*\|\s*(.+?)\s*\|`
@@ -96,34 +93,6 @@ Publish all docs via CLI following parser contracts exactly. Graph parsers use r
       description: "Business logic layer"
   ```
 
-Publish each doc via CLI:
-
-```bash
-rai docs write project-vision --title "{project}: vision" --stdin --output-path governance/vision.md << 'EOF'
-[vision content — outcomes table | **{Bold Name}** | {description} |]
-EOF
-
-rai docs write project-prd --title "{project}: PRD" --stdin --output-path governance/prd.md << 'EOF'
-[prd content — requirements as ### RF-XX: Title]
-EOF
-
-rai docs write project-guardrails --title "{project}: guardrails" --stdin --output-path governance/guardrails.md << 'EOF'
-[guardrails — YAML frontmatter type: guardrails, table | ID | Level | Guardrail | Verification | Derived from |]
-EOF
-
-rai docs write project-backlog --title "{project}: backlog" --stdin --output-path governance/backlog.md << 'EOF'
-[backlog — header # Backlog: {name}, epic rows | E{N} | ... |]
-EOF
-
-rai docs write architecture-system-context --title "{project}: system context" --stdin --output-path governance/architecture/system-context.md << 'EOF'
-[external interfaces table]
-EOF
-
-rai docs write architecture-system-design --title "{project}: system design" --stdin --output-path governance/architecture/system-design.md << 'EOF'
-[YAML frontmatter type: architecture_design, layers as list of dicts with name/modules/description]
-EOF
-```
-
 Update `.raise/manifest.yaml` with branch configuration.
 
 <verification>
@@ -134,9 +103,8 @@ All 6 docs written. No placeholder content remains.
 
 ```bash
 rai graph build
+rai graph query "requirement outcome guardrail" --types requirement,outcome,guardrail --limit 50
 ```
-
-Then use `raise_graph_query` MCP tool with query="requirement outcome guardrail" (limit 50). If MCP tools are not available, fall back to: `rai graph query "requirement outcome guardrail" --types requirement,outcome,guardrail --limit 50`
 
 Need 30+ governance nodes total: requirements (~5-8), outcomes (~5-7), guardrails (~10-13), project (1), epics (~3-5).
 

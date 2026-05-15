@@ -1,13 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-- Bash(git:*)
-description: Initialize epic directory, brief, and tracker entry. Use to begin a new
-  epic.
+description: 'Initialize an epic with scope artifacts and tracker entry. Epics are
+  logical containers — no epic branch is created. Story branches are created directly
+  from the development branch.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -58,12 +54,6 @@ Initialize an epic with scope artifacts and a tracker entry. Epics are logical c
 
 ## Steps
 
-### Step 0: Instrument
-
-```bash
-rai signal emit-work epic "{epic_id}" --event start --phase init 2>/dev/null || true
-```
-
 ### Step 1: Verify Development Branch
 
 Ensure on `{dev_branch}` (for creating scope artifacts):
@@ -81,50 +71,12 @@ git branch --show-current
 On `{dev_branch}`, up to date with remote.
 </verification>
 
-### Step 2: Verify No Directory Collision
+### Step 2: Define Scope & Commit
 
-Before creating the epic directory, check that no existing directory would collide:
+Create TWO artifacts:
 
-```bash
-ls work/epics/ | grep -i "^e{N}-"
-```
-
-| Condition | Action |
-|-----------|--------|
-| No match | Continue — safe to create |
-| Match found | **STOP** — directory `e{N}-*` already exists. Ask the developer to choose a different epic number |
-
-This prevents ID collisions in the knowledge graph (RAISE-1199, RAISE-1204).
-
-<verification>
-No existing directory matches `e{N}-*` pattern.
-</verification>
-
-### Step 3: Define Scope & Commit
-
-Create TWO artifacts via CLI:
-
-1. `work/epics/e{N}-{name}/brief.md` — hypothesis, success metrics, appetite, rabbit holes:
-
-```bash
-rai docs write epic-brief \
-  --title "E{N}: {epic-name} brief" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/brief.md << 'EOF'
-[brief content following templates/brief.md]
-EOF
-```
-
-2. `work/epics/e{N}-{name}/scope.md` — objective, in/out scope, planned stories, done criteria:
-
-```bash
-rai docs write epic-scope \
-  --title "E{N}: {epic-name} scope" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/scope.md << 'EOF'
-[scope content: objective, in/out scope, planned stories, done criteria]
-EOF
-```
+1. `work/epics/e{N}-{name}/brief.md` using `templates/brief.md` — hypothesis, success metrics, appetite, rabbit holes.
+2. `work/epics/e{N}-{name}/scope.md` — objective, in/out scope, planned stories, done criteria.
 
 Commit:
 
@@ -141,70 +93,26 @@ In scope:
 Co-Authored-By: Rai <rai@humansys.ai>"
 ```
 
-Register epic in the backlog tracker:
+Register epic in the backlog tracker via CLI:
 
-**If Jira issue exists** — query available statuses and transition to start:
-```bash
-rai backlog statuses list --issue-type Epic
-```
-Infer start status (`category=indeterminate`, name suggests active work). If ambiguous, ask developer. Then:
-```bash
-rai backlog transition {JIRA_KEY} {start_slug}
-```
+- **If Jira issue exists:** `rai backlog transition {JIRA_KEY} "In Progress" -a jira`
+- **If new epic (no Jira key):** `rai backlog create "{title}" -p RAISE -t Epic -l epic`
 
-**If new epic (no Jira key)** — verify credentials, read project key from backlog.yaml and create:
-
-> **Credentials check (mandatory before creating):** Verify `JIRA_API_TOKEN` or `JIRA_API_TOKEN_HUMANSYS` is set in the environment. If not, source the project `.env` (`set -a && source .env && set +a`) or stop and ask the developer. **Never run `rai backlog create` without credentials** — it creates a local-only entry that silently syncs as a duplicate on the next credentialed invocation.
+Emit telemetry:
 
 ```bash
-BACKLOG_PROJECT=$(python3 -c "
-import yaml
-cfg = yaml.safe_load(open('.raise/backlog.yaml'))
-orgs = cfg.get('jira', {}).get('organizations', {}).values()
-projs = next(iter(orgs), {}).get('projects', [])
-print(projs[0] if projs else '')
-" 2>/dev/null)
-rai backlog create "{title}" \
-  -p "${BACKLOG_PROJECT}" \
-  -t Epic \
-  -l epic \
-  -d "{objective — 1-line from the brief}"
+rai signal emit-work epic E{N} --event start
 ```
-
-| Condition | Action |
-|-----------|--------|
-| Jira key exists | statuses list → infer → transition |
-| No key, project found | create with BACKLOG_PROJECT |
-| Transition/create fails | Log warning and continue — non-blocking |
 
 <verification>
 Scope commit on `{dev_branch}`. Epic visible in backlog.
 </verification>
 
 <if-blocked>
-Adapter not configured → log warning and continue. Backlog sync is best-effort.
+CLI adapter not configured → log warning and continue. Backlog sync is best-effort.
 </if-blocked>
 
-### Step 3b: Create Epic Worktree Branch (when using a dedicated worktree)
-
-If this epic is being developed in a dedicated git worktree, create the per-epic intermediate branch now:
-
-```bash
-git checkout -b worktree-{epic-slug} {dev_branch}
-```
-
-Stories will merge to this branch (not to `{dev_branch}` directly). Only `rai-epic-close` merges `worktree-{epic-slug}` → `{dev_branch}` via MR.
-
-| Condition | Action |
-|-----------|--------|
-| Epic uses a dedicated git worktree | Create `worktree-{epic-slug}` from `{dev_branch}` — mandatory |
-| Standalone epic on the main worktree | Skip — no intermediate branch needed |
-
-<verification>
-Worktree branch `worktree-{epic-slug}` created (or skip documented for standalone epic).
-</verification>
-
-### Step 4: Present Next Steps
+### Step 3: Present Next Steps
 
 Show the developer:
 - Commit hash and epic directory path
@@ -221,23 +129,17 @@ Show the developer:
 | Backlog entry | Tracker via `rai backlog` CLI |
 | Next | `/rai-epic-design` |
 
-```bash
-rai signal emit-work epic "{epic_id}" --event complete --phase init 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
-
 ## Quality Checklist
 
 - [ ] Epic Brief created from `templates/brief.md`
 - [ ] Scope commit includes objective and boundaries
 - [ ] Epic registered in tracker via `rai backlog` CLI
-- [ ] Epic worktree branch `worktree-{epic-slug}` created when using a dedicated worktree
-- [ ] NEVER skip worktree branch — stories must not merge directly to `{dev_branch}` in a dedicated worktree
+- [ ] No epic branch created — epics are logical containers only
+- [ ] NEVER create epic branches — story branches go directly from `{dev_branch}`
 
 ## References
 
 - Next: `/rai-epic-design`
 - Stories: `/rai-story-start` (branches from `{dev_branch}`)
 - Close: `/rai-epic-close`
-- Branch model: `AGENTS.md` § Branch Model
+- Branch model: `CLAUDE.md` § Branch Model

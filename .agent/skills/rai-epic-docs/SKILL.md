@@ -1,12 +1,10 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-description: Generate architecture docs and publish to Confluence. Use before epic
-  close.
+description: 'Generate developer and user-facing documentation for a completed epic.
+  Produces technical architecture docs with worked examples, extension guides, data
+  flow diagrams, invariants, and failure mode catalogs. Publishes to Confluence. Run
+  before /rai-epic-close as a documentation gate.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -281,16 +279,7 @@ Create an index page linking to child pages per subsystem.
 
 **Parent page:** Find the epic's Confluence space/parent. If none exists, use the governance section.
 
-Publish via `rai docs write` CLI command (writes local file + publishes via docs adapter in one call):
-
-```bash
-rai docs write epic-docs \
-  --title "E{N}: {epic-name} — Developer Documentation" \
-  --stdin \
-  --output-path work/epics/e{N}-{slug}/docs.md << 'EOF'
-[assembled content from Steps 2-6]
-EOF
-```
+Use `confluence_create_page` or `confluence_update_page` MCP tools.
 
 <verification>
 Page(s) created in Confluence. URLs captured.
@@ -318,7 +307,7 @@ Human approved documentation. Ready for /rai-epic-close.
 
 | Item | Destination |
 |------|-------------|
-| Developer documentation | `work/epics/e{N}-{slug}/docs.md` (local) + docs adapter (type: epic-docs) |
+| Developer documentation | Confluence page(s) |
 | Next | `/rai-epic-close` |
 
 ## Quality Checklist

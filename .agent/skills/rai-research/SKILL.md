@@ -1,15 +1,10 @@
 ---
-allowed-tools:
-- Read
-- Write
-- Grep
-- Glob
-- Bash(rai:*)
-- Bash(ddgr:*)
-- WebFetch
-- WebSearch
-description: Research with triangulated evidence to inform decisions. Use before ADRs
-  or evaluations.
+description: 'Conduct epistemologically rigorous research to inform decisions. Use
+  before ADRs, when evaluating competing approaches, entering unfamiliar domains,
+  or resolving parking lot items. Produces evidence catalogs with triangulated claims
+  and actionable recommendations.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -78,22 +73,8 @@ Question too vague → decompose into sub-questions.
 
 Gather sources: academic papers, official docs, GitHub repos (stars/activity), engineering blogs, community discussions.
 
-**Supply Chain Health evaluation** — When research involves package or dependency selection, evaluate supply chain health for each package under consideration:
-
-- **PyPI version history** — stable releases? frequent yanks?
-- **Download count** — established package or niche?
-- **Last release date** — actively maintained?
-- **Maintainer count** — bus factor (single point of failure)?
-- **Yank history** — has this package had yanked versions?
-- **Alternative evaluation** — lighter alternative available? DIY in <50 LOC?
-- **Isolation strategy** — can this be confined to a single module?
-
-> See pattern **PAT-E-1282**: *Consumer reputation ≠ package stability — verify supply chain independently*
-
-Document findings under a "Supply Chain Health" section in the research report. When research doesn't involve package evaluation, state "N/A — no package evaluation in scope."
-
 <verification>
-10+ sources collected (scaled to depth). Supply chain health evaluated for each package under consideration (or N/A).
+10+ sources collected (scaled to depth).
 </verification>
 
 ### Step 3: Build Evidence Catalog
@@ -133,32 +114,13 @@ Connect to governance: create/reference ADR if architectural, update backlog if 
 Recommendation is actionable and traces to evidence.
 </verification>
 
-### Step 6: Publish Report
-
-Persist report to local path and docs adapter:
-
-```bash
-rai docs write research \
-  --title "{topic} — Research Report {YYYY-MM-DD}" \
-  --stdin \
-  --output-path work/research/{topic}/{topic}-report.md << 'EOF'
-[assembled report: question, evidence synthesis, recommendation, trade-offs, risks]
-EOF
-```
-
-Evidence catalog and README are local-only — write with Write tool as usual.
-
-<verification>
-Report persisted locally and published via docs adapter. Evidence catalog and README saved locally.
-</verification>
-
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| Report | `work/research/{topic}/{topic}-report.md` (local) + docs adapter (type: research) |
-| Evidence catalog | `work/research/{topic}/sources/evidence-catalog.md` (local) |
-| Navigation | `work/research/{topic}/README.md` (local) |
+| Report | `work/research/{topic}/{topic}-report.md` |
+| Evidence catalog | `work/research/{topic}/sources/evidence-catalog.md` |
+| Navigation | `work/research/{topic}/README.md` |
 | Next | ADR, backlog item, or parking lot update |
 
 ## Quality Checklist
@@ -169,7 +131,6 @@ Report persisted locally and published via docs adapter. Evidence catalog and RE
 - [ ] Major claims triangulated (3+ independent sources)
 - [ ] Confidence level explicitly stated on recommendation
 - [ ] Contrary evidence acknowledged (not hidden)
-- [ ] Supply chain health evaluated for packages under consideration (or N/A)
 - [ ] Governance linkage established (ADR, backlog, or parking lot)
 - [ ] NEVER present single-source findings as consensus
 

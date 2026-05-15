@@ -1,12 +1,8 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Write
-- Grep
-- Glob
-- Bash(rai:*)
-description: Onboard a developer to RaiSE interactively. Use for first-time setup.
+description: 'Conversational developer onboarding for RaiSE. Detects scenario, sets
+  up profile and graph, offers optional personalization.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -37,7 +33,7 @@ Get a developer fully set up in a RaiSE project through a guided flow that detec
 
 **When to use:** First time a developer works in a RaiSE project. Subsequent runs verify setup.
 
-**When to skip:** Developer is already set up (profile exists, graph exists).
+**When to skip:** Developer is already set up (profile exists, graph exists, CLAUDE.local.md exists).
 
 **Inputs:** A project with `.raise/` directory (from `rai init`).
 
@@ -91,7 +87,7 @@ Preferences saved or defaults accepted.
 
 ### Step 4: Verify Setup
 
-Build graph if missing (`rai graph build`). Run context bundle:
+Build graph if missing (`rai graph build`). Scaffold `CLAUDE.local.md` if missing. Run context bundle:
 
 ```bash
 rai session start --project . --context
@@ -107,31 +103,9 @@ Profile, graph, and local config all present and functional.
 
 ```
 Welcome to RaiSE, {name}!
-Setup: Profile ({prefix}), Graph ({N} concepts)
+Setup: Profile ({prefix}), Graph ({N} concepts), CLAUDE.local.md
 Next: /rai-session-start
 ```
-
-### Step 6: Adapter Guidance
-
-Check which adapter config files exist:
-
-```bash
-ls .raise/backlog.yaml 2>/dev/null && echo BACKLOG_OK || echo BACKLOG_MISSING
-ls .raise/docs.yaml 2>/dev/null && echo DOCS_OK || echo DOCS_MISSING
-```
-
-If one or both are missing, append to the welcome message:
-
-| Missing | Line to show |
-|---------|-------------|
-| `backlog.yaml` | `- No backlog tracker — run /rai-backlog-setup to connect Jira or another tracker` |
-| `docs.yaml` | `- No docs adapter — run /rai-docs-setup to connect Confluence or another docs target` |
-
-Only show missing adapters. If both exist, skip silently.
-
-<verification>
-Adapter status checked. Missing adapters mentioned (or nothing shown if both present).
-</verification>
 
 ## Output
 
@@ -139,8 +113,7 @@ Adapter status checked. Missing adapters mentioned (or nothing shown if both pre
 |------|-------------|
 | Developer profile | `~/.rai/developer.yaml` |
 | Knowledge graph | `.raise/rai/memory/index.json` |
-| Session context | Derived from git (ADR-038) |
-| Adapter guidance | Shown in welcome message if adapters missing |
+| Local config | `CLAUDE.local.md` |
 | Next | `/rai-session-start` |
 
 ## Quality Checklist
@@ -150,7 +123,7 @@ Adapter status checked. Missing adapters mentioned (or nothing shown if both pre
 - [ ] Personalization clearly framed as optional
 - [ ] Graph built if missing (not assumed)
 - [ ] Context bundle runs successfully after setup
-- [ ] Session context derived from git — no manual file needed
+- [ ] NEVER overwrite existing CLAUDE.local.md
 - [ ] NEVER ask about experience level — learned implicitly through coaching
 
 ## References

@@ -1,30 +1,18 @@
 ---
-allowed-tools:
-- Read
-- Grep
-- Glob
-- Bash(rai:*)
-description: Extract learnings and persist patterns from completed story. Use after
-  implementation.
+description: 'Reflect on completed stories to extract learnings, identify process
+  improvements, and update the framework with insights gained. Use after implementation
+  is complete to close the development cycle.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
-  raise.aspects: introspection
   raise.fase: '7'
   raise.frequency: per-story
   raise.gate: ''
   raise.inputs: '- tests_passing: boolean, required, cli
 
     '
-  raise.introspection:
-    affected_modules: []
-    context_source: all story artifacts
-    max_jit_queries: 3
-    max_tier1_queries: 2
-    phase: story.review
-    tier1_queries:
-    - evaluation patterns for {affected_modules}
-    - process patterns from recent stories
   raise.next: story-close
   raise.outputs: '- retrospective_md: file_path, next_skill
 
@@ -32,14 +20,10 @@ metadata:
 
     '
   raise.prerequisites: story-implement
-  raise.version: 2.5.0
+  raise.version: 2.2.0
   raise.visibility: public
   raise.work_cycle: story
 name: rai-story-review
-raise.mastery:
-  ha: Adapt depth to story complexity, batch small story reviews
-  ri: Custom review patterns, integrate with team retrospectives
-  shu: Follow all steps, answer all checkpoint questions with specific examples
 ---
 
 # Story Review
@@ -50,7 +34,9 @@ Reflect on the completed story to extract learnings, persist patterns, reinforce
 
 ## Mastery Levels (ShuHaRi)
 
-See `raise.mastery` in frontmatter.
+- **Shu**: Follow all steps, answer all checkpoint questions with specific examples
+- **Ha**: Adapt depth to story complexity, batch small story reviews
+- **Ri**: Custom review patterns, integrate with team retrospectives
 
 ## Context
 
@@ -60,42 +46,44 @@ See `raise.mastery` in frontmatter.
 
 ## Steps
 
-### PRIME (mandatory — do not skip)
-
-Before starting Step 1, you MUST execute the PRIME protocol:
-
-1. **Graph query**: Execute tier1 queries from this skill's metadata using the `raise_graph_query` MCP tool. If MCP unavailable, fall back to `rai graph query`. 0 results is valid.
-2. **Emit start**:
-   ```bash
-   rai signal emit-work story "{story_id}" --event start --phase review 2>/dev/null || true
-   ```
-
 ### Step 1: Verify Tests Pass
 
-Trust the end-of-story scoped gate from `/rai-story-implement` Step 5 — do **not** re-run
-the full suite here. Review requires that the scoped gates passed; the full suite runs once
-at push time via `/rai-mr-create`.
+Determine which test command to run using this priority chain:
 
-```bash
-# Confirm the implement-complete signal was emitted for the current HEAD
-rai signal query story "{story_id}" --event complete --phase implement \
-  --session-id "${RAISE_CC_SESSION_ID}" --latest --fields commit 2>/dev/null
+1. **Check `.raise/manifest.yaml`** for `project.test_command` — if set, use it directly (configuration over convention)
+2. **Detect language** from `project.project_type` in manifest, or scan file extensions of changed files (`git diff --name-only`)
+3. **Map language to default** using the table below
+
+```yaml
+# .raise/manifest.yaml — example
+project:
+  test_command: "cargo test --quiet"   # explicit override, highest priority
+  project_type: rust
 ```
+
+| Language | Extensions | Default Test Command |
+|----------|-----------|----------------------|
+| Python | `.py`, `.pyi` | `uv run pytest --tb=short` |
+| TypeScript | `.ts`, `.tsx` | `npx vitest run` or `npm test` |
+| JavaScript | `.js`, `.jsx` | `npx vitest run` or `npm test` |
+| C# | `.cs` | `dotnet test --verbosity quiet` |
+| Go | `.go` | `go test ./...` |
+| PHP | `.php` | `vendor/bin/phpunit` |
+| Dart | `.dart` | `flutter test` |
+| Unknown | — | Ask developer |
+
+The table is a **fallback** — `project.test_command` always wins when present.
 
 | Condition | Action |
 |-----------|--------|
-| Signal found for current HEAD | ✓ Tests already verified — continue |
-| Signal missing or stale commit | Run scoped package gate: `rai gate check gate-tests --scope packages/<pkg>/` |
-| Scoped gate fails | Fix before reviewing — review requires green tests |
+| Tests green | Continue |
+| Tests failing | Fix first — review requires green tests |
 
 <verification>
-Implement-complete signal confirmed for current HEAD (or scoped gate re-run and passing).
+Project language detected. Tests passing with appropriate runner.
 </verification>
 
 ### Step 2: Gather Data & Reflect
-
-> **JIT**: Before reflecting on development process, query graph for evaluation patterns
-> → `aspects/introspection.md § JIT Protocol`
 
 Review the story development: actual vs estimated time, blockers, plan deviations.
 
@@ -111,46 +99,18 @@ Identify concrete improvements to skills, guardrails, or templates. Apply small 
 All four questions answered. Improvements identified (or celebrated that none needed).
 </verification>
 
-### Step 3: Aggregate Learning Records
+### Step 3: Persist Patterns & Reinforce
 
-Read learning records produced during this story's lifecycle:
-- `.raise/rai/learnings/rai-story-design/{work_id}/record.yaml`
-- `.raise/rai/learnings/rai-story-plan/{work_id}/record.yaml`
-- `.raise/rai/learnings/rai-story-implement/{work_id}/record.yaml`
+**Add new patterns** worth preserving across sessions:
 
-If any record is missing (silent node or execution gap), note it and continue — missing records are valid signal.
-
-Produce aggregate summary with these metrics:
-
-| Metric | Calculation | What it tells us |
-|--------|-------------|-----------------|
-| **Acceptance rate** | Patterns voted +1 / total patterns primed | Are PRIME queries returning useful context? |
-| **Gap rate** | Total gaps / total JIT queries | Is the graph missing knowledge we need? |
-| **Pattern utility** | Patterns +1 / (patterns +1 + patterns -1) | Are stored patterns helping or misleading? |
-
-Include the aggregate in the retrospective (Step 5).
-
-<verification>
-Learning records read (or missing noted). Metrics calculated. Aggregate ready for retrospective.
-</verification>
-
-### Step 4: Persist Patterns & Reinforce
-
-> **JIT**: Before persisting patterns, query graph for existing patterns to avoid duplicates
-> → `aspects/introspection.md § JIT Protocol`
-
-**Add new patterns** worth preserving across sessions using the `raise_pattern_add` MCP tool with content="Pattern description", context="context,keywords", pattern_type="process", from_story="S{N}.{M}".
-
-If MCP tools are not available, fall back to:
 ```bash
 rai pattern add "Pattern description" -c "context,keywords" -t process --from S{N}.{M}
 ```
 
 Types: `process`, `technical`, `architecture`, `codebase`.
 
-**Reinforce existing patterns** — evaluate behavioral patterns loaded at session start using the `raise_pattern_reinforce` MCP tool with pattern_id={pattern_id}, vote={1|0|-1}, from_story="S{N}.{M}".
+**Reinforce existing patterns** — evaluate behavioral patterns loaded at session start:
 
-If MCP tools are not available, fall back to:
 ```bash
 rai pattern reinforce {pattern_id} --vote {1|0|-1} --from S{N}.{M}
 ```
@@ -167,76 +127,49 @@ Only evaluate patterns you consciously considered. `0` is correct for most patte
 New patterns persisted. Behavioral patterns evaluated (or explicitly skipped).
 </verification>
 
-### Step 5: Document Retrospective
+### Step 4: Document Retrospective
 
-Publish retrospective to local path and docs adapter via:
-
-```bash
-rai docs write story \
-  --title "S{N}.{M}: {story-name} — Retrospective" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/stories/s{N}.{M}-retrospective.md << 'EOF'
-# Retrospective: S{N}.{M} — {story-name}
-
-**Dates:** {start-date} → {end-date}
-**Estimated:** {estimated} | **Actual:** {actual}
-
-## Summary
-{summary}
-
-## What went well
-{went-well}
-
-## What to improve
-{to-improve}
-
-## Heutagogical Checkpoint
-1. **What did I learn?** {answer}
-2. **What would I change about the process?** {answer}
-3. **Framework improvements?** {answer}
-4. **More capable of now?** {answer}
-
-## Improvements applied
-{improvements}
-
-## Patterns added / reinforced
-{patterns}
-
-## Learning chain summary
-{records-found-or-missing, aggregate metrics, notable gaps, downstream enrichments}
-EOF
-```
+Create `work/epics/e{N}-{name}/stories/s{N}.{M}-retrospective.md` with:
+- Summary (story ID, dates, estimated vs actual time)
+- What went well / what to improve
+- Heutagogical checkpoint answers
+- Improvements applied
+- Patterns added/reinforced
 
 <verification>
-Retrospective persisted locally and published via docs adapter. Learning chain summary included.
+Retrospective document created.
+</verification>
+
+### Step 5: Emit Calibration Telemetry
+
+```bash
+rai signal emit-calibration S{N}.{M} --size {XS|S|M|L} --estimated {minutes} --actual {minutes}
+```
+
+This feeds the velocity tracking system for future estimation accuracy.
+
+<verification>
+Calibration event recorded (or skipped if CLI unavailable).
 </verification>
 
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| Retrospective | `work/epics/e{N}-{name}/stories/s{N}.{M}-retrospective.md` (local) + docs adapter (type: story) |
+| Retrospective | `work/epics/e{N}-{name}/stories/s{N}.{M}-retrospective.md` |
 | Patterns | `.raise/rai/memory/patterns.jsonl` |
-| Signal | WorkLifecycle event emitted (start on entry, complete here) |
-
-Transition story to review status before signaling completion (non-blocking):
-```bash
-rai backlog statuses list --issue-type Story
-```
-Infer review status: `category=indeterminate` + name contains Review, Revision, Code Review.
-Single candidate → transition silently. Multiple or ambiguous → ask developer. None → skip silently.
-```bash
-rai backlog transition {story_key} {review_slug}
-```
-
-```bash
-rai signal emit-work story "{story_id}" --event complete --phase review 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
+| Calibration | Via `rai signal emit-calibration` |
+| Next | `/rai-story-close` |
 
 ## Quality Checklist
 
+- [ ] Project language detected before running tests
+- [ ] Tests pass with language-appropriate runner (gate)
+- [ ] Heutagogical checkpoint answered with specific examples
+- [ ] New patterns persisted via `rai pattern add`
+- [ ] Behavioral patterns reinforced via `rai pattern reinforce`
+- [ ] Calibration telemetry emitted
+- [ ] Retrospective document created
 - [ ] NEVER skip pattern reinforce — scoring system depends on it (RAISE-170)
 - [ ] NEVER give vague checkpoint answers — be specific with concrete examples
 

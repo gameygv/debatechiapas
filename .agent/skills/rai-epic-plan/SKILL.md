@@ -1,37 +1,24 @@
 ---
-allowed-tools:
-- Read
-- Grep
-- Glob
-- Bash(rai:*)
-description: Sequence epic stories into milestones and dependencies. Use after epic
-  design.
+description: 'Sequence features from epic-design into an executable plan with milestones,
+  dependencies, and progress tracking. Use after /rai-epic-design to create a realistic
+  implementation roadmap before starting story work.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
-  raise.aspects: introspection
   raise.fase: '4'
   raise.frequency: per-epic
   raise.gate: ''
   raise.inputs: '- scope: file_path, required, previous_skill
 
     '
-  raise.introspection:
-    affected_modules: []
-    context_source: scope doc from epic-design
-    max_jit_queries: 3
-    max_tier1_queries: 3
-    phase: epic.plan
-    tier1_queries:
-    - sequencing patterns for {strategy} ordering
-    - estimation patterns for {size} epics
-    - milestone patterns for multi-story epics
   raise.next: story-start
   raise.outputs: '- scope: file_path, next_skill
 
     '
   raise.prerequisites: epic-design
-  raise.version: 2.4.0
+  raise.version: 2.2.0
   raise.visibility: public
   raise.work_cycle: epic
 name: rai-epic-plan
@@ -58,18 +45,6 @@ Transform the story list from `/rai-epic-design` into a sequenced implementation
 **Inputs:** Epic scope document (`work/epics/e{N}-{name}/scope.md`), calibration data (if available).
 
 ## Steps
-
-### PRIME (mandatory — do not skip)
-
-Before starting Step 1, you MUST execute the PRIME protocol:
-
-1. **Chain read**: Read epic-design's learning record at `.raise/rai/learnings/rai-epic-design/{work_id}/record.yaml`. Enrich epic-design's record with `downstream: {scope_clear: bool, stories_sequenceable: bool}`.
-2. **Graph query**: Execute tier1 queries from this skill's metadata using the `raise_graph_query` MCP tool. If MCP tools are not available, fall back to `rai graph query`. If graph is unavailable, note and continue.
-3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
-4. **Emit start**: Signal lifecycle start for observability.
-   ```bash
-   rai signal emit-work epic "{epic_id}" --event start --phase plan 2>/dev/null || true
-   ```
 
 ### Step 1: Review Epic Scope
 
@@ -99,9 +74,6 @@ Order stories using these strategies (in priority order):
 
 For each story, document: position, rationale, dependencies (hard/soft/external), what it enables.
 
-> **JIT**: Before choosing sequencing strategy, query graph for ordering patterns and calibration data
-> → `aspects/introspection.md § JIT Protocol`
-
 **Identify parallel opportunities:** Stories with no mutual dependencies, different codebase areas, or independent concerns can run concurrently.
 
 <verification>
@@ -120,9 +92,6 @@ Create 2-4 intermediate checkpoints:
 | **M4: Epic Complete** | Done criteria met | Ready for `/rai-epic-close` |
 
 Per milestone: stories included, success criteria (verifiable), demo capability.
-
-> **JIT**: Before defining milestones, query graph for calibration patterns and checkpoint strategies
-> → `aspects/introspection.md § JIT Protocol`
 
 **Integration checkpoint:** For epics with multiple components (client/server, CLI/API, frontend/backend), schedule an **E2E integration milestone** before the final story. This checkpoint runs real infrastructure (docker compose, actual DB) and verifies cross-story contracts (auth headers, payload schemas, parameter limits). Unit tests with mocks cannot catch these mismatches — only real E2E validates the seams between stories.
 
@@ -143,31 +112,12 @@ Tracking table added to epic scope document.
 
 ### Step 5: Update Scope Document
 
-Append the implementation plan section to `work/epics/e{N}-{name}/scope.md` via CLI (preserves existing content + publishes to Confluence):
-
-```bash
-rai docs write epic-scope \
-  --title "E{N}: {epic-name} scope + plan" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/scope.md << EOF
-$(cat work/epics/e{N}-{name}/scope.md)
-
-## Implementation Plan
-{story sequence with rationale}
-
-## Milestones
-{milestones with success criteria}
-
-{parallel work streams if any}
-
-{progress tracking table}
-
-### Sequencing Risks
-{top 3 risks}
-EOF
-```
-
-Note: unquoted heredoc so `$(cat ...)` expands the existing scope content.
+Append the implementation plan section to `work/epics/e{N}-{name}/scope.md`. Include:
+- Story sequence with rationale
+- Milestones with success criteria
+- Parallel work streams (if any)
+- Progress tracking table
+- Sequencing risks (top 3)
 
 Present plan to human for review before starting first story.
 
@@ -182,22 +132,6 @@ Scope document updated. Plan reviewable in <5 minutes. Human acknowledges.
 | Implementation plan | Appended to `work/epics/e{N}-{name}/scope.md` |
 | Plan template | `templates/plan-section.md` |
 | Next | `/rai-story-design` for first story in sequence |
-
-Transition epic to implement status before signaling completion (non-blocking):
-```bash
-rai backlog statuses list --issue-type Epic
-```
-Infer implement status: `category=indeterminate` + name contains Implement, Progress, Development.
-Single candidate → transition silently. Multiple or ambiguous → ask developer. None → skip silently.
-```bash
-rai backlog transition {JIRA_KEY} {implement_slug}
-```
-
-```bash
-rai signal emit-work epic "{epic_id}" --event complete --phase plan 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
 
 ## Quality Checklist
 

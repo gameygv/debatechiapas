@@ -1,17 +1,13 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-- Bash(git:*)
-description: Close epic with retrospective, push, and merge request. Use after all
-  stories done.
+description: 'Complete an epic with retrospective, metrics capture, push to origin,
+  merge request creation, and tracking update. Epics are logical containers — stories
+  merge locally to dev during story-close, then epic-close pushes dev and creates
+  the MR.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
-  raise.aspects: introspection
   raise.fase: '9'
   raise.frequency: per-epic
   raise.gate: ''
@@ -22,15 +18,6 @@ metadata:
     - dev_branch: string, required, config
 
     '
-  raise.introspection:
-    affected_modules: []
-    context_source: all epic artifacts
-    max_jit_queries: 3
-    max_tier1_queries: 2
-    phase: epic.close
-    tier1_queries:
-    - retrospective patterns for {domain} epics
-    - process improvement patterns from similar epics
   raise.next: ''
   raise.outputs: '- retrospective: file_path, file
 
@@ -38,7 +25,7 @@ metadata:
 
     '
   raise.prerequisites: all stories complete
-  raise.version: 3.2.0
+  raise.version: 3.0.0
   raise.visibility: public
   raise.work_cycle: epic
 name: rai-epic-close
@@ -68,21 +55,9 @@ Complete an epic by conducting a retrospective, tagging the milestone, and updat
 
 ## Steps
 
-### PRIME (mandatory — do not skip)
+### Step 1: Verify Stories Complete
 
-Before starting Step 1, you MUST execute the PRIME protocol:
-
-1. **Chain read**: Read ALL learning records from this epic's skills (epic-design, epic-plan, and all story records). This provides the aggregate view for the retrospective.
-2. **Graph query**: Execute tier1 queries from this skill's metadata using the `raise_graph_query` MCP tool. If MCP tools are not available, fall back to `rai graph query`. If graph is unavailable, note and continue.
-3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
-4. **Emit start**: Signal lifecycle start for observability.
-   ```bash
-   rai signal emit-work epic "{epic_id}" --event start --phase close 2>/dev/null || true
-   ```
-
-### Step 1: Verify Stories Complete + Scope Re-read (mandatory)
-
-**1a. Check all stories are done** in the epic scope document:
+Check all stories are done in the epic scope document:
 
 ```bash
 grep -E "^\s*-\s*\[ \]" "work/epics/e{N}-{name}/scope.md"
@@ -90,85 +65,43 @@ grep -E "^\s*-\s*\[ \]" "work/epics/e{N}-{name}/scope.md"
 
 | Condition | Action |
 |-----------|--------|
-| All stories checked | Continue to 1b |
+| All stories checked | Continue |
 | Incomplete stories | Complete them first or explicitly descope |
 
-**1b. Scope re-read (mandatory — do not skip)**: open `work/epics/e{N}-{name}/scope.md` and the original epic brief. Go through the **"In scope"** and **"Done when"** sections **item by item** and verify each commitment against observable state of the code. Do not trust "all stories checked ⇒ scope fulfilled" — it's not the same claim.
-
-Pay special attention to commitments with elimination verbs (*"eliminate X"*, *"remove Y"*, *"replace Z with …"*, *"consolidate A and B"*). For each such commitment, answer one of three explicitly in the retrospective:
-
-- **Fulfilled** — reference commit/file showing the removal
-- **Descoped** — say why and link to a new epic/story that owns the remaining work
-- **Not fulfilled** — stop. Do not close. Either finish the work or explicitly re-scope before closing
-
-This exists because RCA s2092.1 showed E1323 ("eliminate subprocess layer") closed Done while the layer was actually **amplified** — the tools shipped, the tests passed, nobody re-read the scope (pattern `refactor-declared-done-without-sweep` at epic-scale).
-
-> **JIT**: Before descoping decisions, query graph for completion patterns and prior descoping outcomes
-> → `aspects/introspection.md § JIT Protocol`
-
 <verification>
-All stories marked complete in epic scope AND each "In scope" / "Done when" item re-verified against code. Elimination commitments resolved (fulfilled | descoped-with-link | not-fulfilled-stop).
+All stories marked complete in epic scope.
 </verification>
 
-### Step 1.5: Reconcile Jira Child Story Status (RAISE-1847)
+### Step 2: Run Tests & Write Retrospective
 
-Query Jira for child stories that are NOT in Done status:
+Determine which test command to run using this priority chain:
 
-```bash
-rai backlog search "parent = {EPIC_KEY} AND status != Done"
-```
+1. **Check `.raise/manifest.yaml`** for `project.test_command` — if set, use it directly (configuration over convention)
+2. **Detect language** from `project.project_type` in manifest, or scan file extensions of changed files (`git diff --name-only`)
+3. **Map language to default** using the table below
 
-| Condition | Action |
-|-----------|--------|
-| No results (all Done) | Continue to Step 2 |
-| Drifted stories found | Present the list and offer resolution (see below) |
-| No Jira adapter configured | Warn: "Jira reconciliation skipped — no adapter" and continue |
-| No epic Jira key | Warn: "No Jira key for epic — skipping reconciliation" and continue |
-| Query fails (network, auth) | Warn: "Jira query failed �� manual check recommended" and continue |
+| Language | Extensions | Default Test Command |
+|----------|-----------|----------------------|
+| Python | `.py`, `.pyi` | `uv run pytest --tb=short` |
+| TypeScript | `.ts`, `.tsx` | `npx vitest run` or `npm test` |
+| JavaScript | `.js`, `.jsx` | `npx vitest run` or `npm test` |
+| C# | `.cs` | `dotnet test --verbosity quiet` |
+| Go | `.go` | `go test ./...` |
+| PHP | `.php` | `vendor/bin/phpunit` |
+| Dart | `.dart` | `flutter test` |
+| Unknown | — | Ask developer |
 
-**When drifted stories are found, present:**
+The table is a **fallback** — `project.test_command` always wins when present.
 
-```
-Jira drift detected: {N} child stories are not in Done status.
-
-  {KEY-1}  {status}  {summary}
-  {KEY-2}  {status}  {summary}
-  ...
-
-Options:
-  1. Batch-transition to Done: rai backlog batch-transition {KEY-1},{KEY-2} done
-  2. Descope explicitly (document in retrospective why they're not Done)
-  3. Abort epic close and fix the stories first
-```
-
-**Do NOT proceed to Step 2 until the user has chosen an option.** This gate prevents silent Jira drift that was found in E1690 audit (5 stories locally done but Backlog in Jira).
+Create retrospective at `work/epics/e{N}-{name}/retrospective.md` using `templates/retrospective.md`. Fill from story retrospectives and git history.
 
 <verification>
-Jira child stories reconciled: all in Done, or user explicitly descoped with documented reason. (Or no Jira adapter — warned and continued.)
+Tests green. Retrospective created with metrics, patterns, and process insights.
 </verification>
 
-### Step 2: Write Retrospective
-
-Do **not** run the full suite here — the full gate runs once in Step 4 via `/rai-mr-create`
-before push. Trust the scoped gates that passed during story-close.
-
-> **JIT**: Before writing retrospective, query graph for process improvement patterns from similar epics
-> → `aspects/introspection.md § JIT Protocol`
-
-Publish retrospective to local path and docs adapter. Use `templates/retrospective.md` as structure, fill from story retrospectives and git history:
-
-```bash
-rai docs write retrospective \
-  --title "E{N}: {Epic Name} — Retrospective" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/retrospective.md << 'EOF'
-[content following templates/retrospective.md structure]
-EOF
-```
-
-<verification>
-Tests green. Retrospective persisted locally and published via docs adapter. Metrics, patterns, and process insights included.
-</verification>
+<if-blocked>
+Tests failing → fix before closing.
+</if-blocked>
 
 ### Step 3: Tag Epic Milestone
 
@@ -198,61 +131,60 @@ Tag created. Retrospective committed.
 
 ### Step 4: Push and Create Merge Request
 
-Invoke `/rai-mr-create` — it runs the full gate suite, rebases onto target if needed,
-pushes, and creates the MR. This is the single point where the full test suite runs.
+Push `{dev_branch}` to origin and create a merge request. This is the single MR for the entire epic — all stories were merged locally during `/rai-story-close`.
 
+```bash
+# Push dev with all epic commits
+git push origin {dev_branch}
+
+# Create merge request via glab (dev → main for releases, or just push dev)
+glab mr create \
+  --source-branch {dev_branch} \
+  --target-branch {main_branch} \
+  --title "epic(e{N}): {Epic Name}" \
+  --description "## Epic E{N}: {Epic Name}
+
+### Stories delivered
+- S{N}.1: {name}
+- S{N}.2: {name}
+- ...
+
+### Key changes
+- {summary of deliverables}
+
+### Retrospective
+- {top learnings}
+
+Co-Authored-By: Rai <rai@humansys.ai>" \
+  --no-editor
 ```
-/rai-mr-create
-  source_branch: {dev_branch}
-  target_branch: {main_branch}
-  title: "epic(e{N}): {Epic Name}"
-  description: |
-    ## Epic E{N}: {Epic Name}
 
-    ### Stories delivered
-    - S{N}.1: {name}
-    ...
-
-    ### Key changes
-    - {summary of deliverables}
-
-    Co-Authored-By: Rai <rai@humansys.ai>
-```
+Present the MR URL to the developer for review.
 
 | Condition | Action |
 |-----------|--------|
-| Full gate passes | `/rai-mr-create` pushes and creates MR |
-| Gate fails | Fix before push — do not skip |
-| No release planned | Push dev only via `/rai-mr-create` without MR |
+| MR to main needed | Create MR as above |
+| No release planned | Push dev only, skip MR to main |
+| `glab` not available | Provide the GitLab URL from `git push` output for manual MR creation |
+| Push rejected | `git pull --rebase origin {dev_branch}`, resolve conflicts, push again |
 
 <verification>
-Full gate passed via `/rai-mr-create`. Branch pushed. MR URL presented to developer.
+Dev pushed to origin. MR created if targeting main. MR URL presented to developer.
 </verification>
 
 ### Step 5: Update Backlog & Context
 
-1. Mark epic complete — query done statuses and transition:
-```bash
-rai backlog statuses list --issue-type Epic
-```
-Infer close status (`category=done`, name suggests completion — not Cancelled/Rejected). If ambiguous, ask developer. Then:
-```bash
-rai backlog transition {JIRA_KEY} {done_slug}
-```
-If no Jira key, search first:
-```bash
-rai backlog search "summary ~ '{epic name}'"
-```
-Then transition the matching key.
+1. Mark epic complete via CLI:
+   - **If Jira issue exists:** `rai backlog transition {JIRA_KEY} "Done" -a jira`
+   - **If no Jira key:** `rai backlog search "summary ~ '{epic name}'" -a jira` to find it, then transition
+2. Emit telemetry:
 
-| Condition | Action |
-|-----------|--------|
-| Jira key known | statuses list → infer → transition |
-| No Jira key | search → resolve key → transition |
-| Transition fails | Log warning and continue — non-blocking |
+```bash
+rai signal emit-work epic E{N} --event complete
+```
 
 <verification>
-Backlog reflects completion.
+Backlog reflects completion. Local context updated.
 </verification>
 
 ## Output
@@ -265,16 +197,9 @@ Backlog reflects completion.
 | Merge request | GitLab MR: `{dev_branch}` → `{main_branch}` (if release) |
 | Backlog update | Tracker via `rai backlog` CLI |
 
-```bash
-rai signal emit-work epic "{epic_id}" --event complete --phase close 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
-
 ## Quality Checklist
 
 - [ ] All stories complete before closing (gate)
-- [ ] Jira child stories reconciled — all Done, or explicitly descoped (RAISE-1847)
 - [ ] Tests pass before closing
 - [ ] Retrospective captures metrics, patterns, and process insights
 - [ ] Epic milestone tagged on `{dev_branch}`

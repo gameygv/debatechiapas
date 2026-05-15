@@ -1,9 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Grep
-- Glob
-description: Run self-diagnostics and guide fixes. Use to troubleshoot RaiSE issues.
+description: 'Run RaiSE self-diagnostics, explain results conversationally, and guide
+  the user through fixes. The CLI does the checking; the skill does the interpreting
+  and helping.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'

@@ -1,12 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-- Bash(git:*)
-description: Create story branch and scope commit. Use to begin story work.
+description: 'Initialize a story with verified context, branch, and scope commit.
+  Use at the beginning of story work to ensure proper setup and traceability from
+  the start.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -31,10 +28,6 @@ metadata:
   raise.visibility: public
   raise.work_cycle: story
 name: rai-story-start
-raise.mastery:
-  ha: Skip epic verification for standalone stories or experiments
-  ri: Custom initialization patterns for specific workflows
-  shu: Follow all steps, verify epic context, create branch with scope commit
 ---
 
 # Story Start
@@ -45,7 +38,9 @@ Initialize a story with a dedicated branch from the development branch and a sco
 
 ## Mastery Levels (ShuHaRi)
 
-See `raise.mastery` in frontmatter.
+- **Shu**: Follow all steps, verify epic context, create branch with scope commit
+- **Ha**: Skip epic verification for standalone stories or experiments
+- **Ri**: Custom initialization patterns for specific workflows
 
 ## Context
 
@@ -58,12 +53,6 @@ See `raise.mastery` in frontmatter.
 **Branch config:** Read `branches.development` from `.raise/manifest.yaml` for `{dev_branch}`. Default: `main`.
 
 ## Steps
-
-### Step 0: Instrument
-
-```bash
-rai signal emit-work story "{story_id}" --event start --phase init 2>/dev/null || true
-```
 
 ### Step 1: Verify Epic Context (if applicable)
 
@@ -106,41 +95,13 @@ On story branch created from `{dev_branch}`.
 
 Create TWO artifacts:
 
-1. `work/epics/e{N}-{name}/stories/s{N}.{M}-story.md` — publish via docs adapter using `templates/story.md` as structure:
-
-```bash
-rai docs write story \
-  --title "S{N}.{M}: {story-name}" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/stories/s{N}.{M}-story.md << 'EOF'
-[user story content following templates/story.md: Connextra format, Gherkin AC, SbE examples]
-EOF
-```
-
-2. `work/epics/e{N}-{name}/stories/s{N}.{M}-scope.md` — in scope/out of scope, done criteria (observable outcomes):
-
-```bash
-rai docs write story-scope \
-  --title "S{N}.{M}: {story-name} scope" \
-  --stdin \
-  --output-path work/epics/e{N}-{name}/stories/s{N}.{M}-scope.md << 'EOF'
-## In Scope
-{items}
-
-## Out of Scope
-{items}
-
-## Done when
-{observable outcomes}
-EOF
-```
+1. `work/epics/e{N}-{name}/stories/s{N}.{M}-story.md` using `templates/story.md` — user story (Connextra), Gherkin AC, SbE examples. For XS stories, informal AC is acceptable.
+2. `work/epics/e{N}-{name}/stories/s{N}.{M}-scope.md` — in scope/out of scope, done criteria (observable outcomes).
 
 Commit:
 
 ```bash
-git branch --show-current | grep -qx "story/s{N}.{M}/{story-slug}" && \
-git add work/epics/e{N}-{name}/stories/s{N}.{M}-story.md \
-        work/epics/e{N}-{name}/stories/s{N}.{M}-scope.md && \
+git add -A
 git commit -m "feat(s{N}.{M}): initialize story scope
 
 In scope:
@@ -154,77 +115,28 @@ Done when:
 Co-Authored-By: Rai <rai@humansys.ai>"
 ```
 
-When committing from a non-CWD worktree, prefix the same chain with `cd /path/to/worktree &&` so the branch assertion and `git add` execute in one shell command.
-
 <verification>
 Scope commit on story branch with boundaries documented.
 </verification>
 
 ### Step 3b: Update Backlog Status
 
-Query available statuses for this issue type:
-```bash
-rai backlog statuses list --issue-type Story
-```
+If the story has a backlog ticket (Jira key or local key):
 
-Infer start status from output:
-- Look for `category=indeterminate` states whose name suggests active work
-  (Implement, In Progress, Started, Active, WIP, Doing…)
-- Single clear candidate → use it silently
-- Multiple candidates or ambiguous name → ask developer:
-  *"Which status means 'work started'? Options: [list]"*
-
-Transition (non-blocking):
 ```bash
-rai backlog transition {story_key} {start_slug}
+rai backlog transition {story_key} in_progress
+rai signal emit-work story S{N}.{M} --event start
 ```
-`{start_slug}` = status name lowercased, spaces→hyphens
-("Implement" → `implement`, "In Progress" → `in-progress`)
 
 | Condition | Action |
 |-----------|--------|
-| Clear candidate found | Transition silently |
-| Ambiguous | Ask developer before transitioning |
-| No ticket | Skip |
-| Transition fails | Log warning and continue |
+| Story has ticket | Transition to `in_progress` |
+| No ticket found | Skip backlog transition (not all stories are tracked externally) |
+| Transition fails | Log warning and continue — backlog errors are **non-blocking** for lifecycle |
 
 <if-blocked>
 Adapter not configured or transition fails → log and continue. Backlog sync is best-effort; it must never block story work.
 </if-blocked>
-
-### Step 3c: Bind Session to Jira Key
-
-When the story has a Jira key, bind it to the per-session context file so CC hooks + MCP tool emissions inherit `RAISE_SESSION_JIRA_KEY` on the next session restart (or fall back to it when the MCP subprocess env misses):
-
-```bash
-rai session bind RAISE_SESSION_JIRA_KEY "{story_key}"
-```
-
-The CLI uses line-replace semantics — it preserves other keys (e.g. `RAISE_SESSION_MISSION_ID`) already in the file. Namespacing by `$RAISE_CC_SESSION_ID` (RAISE-1982) prevents collisions between concurrent CC sessions in the same worktree.
-
-| Condition | Action |
-|-----------|--------|
-| Story has Jira key | Bind the key + emit `session_bind` event |
-| No Jira key (standalone/local story) | Skip — `jira_key=None` preserved |
-
-After binding, emit a `session_bind` event so the server associates this session with the Jira key (S2017.5 — late-bind):
-
-```bash
-python3 .claude/hooks/_emit_hansei.py \
-    --event-type session_bind \
-    --title "Bound {story_key}" \
-    --summary "Late-bind jira_key to session" \
-    --jira-key "{story_key}" \
-    --session-id "$RAISE_CC_SESSION_ID" \
-    --tags "kind:lifecycle"
-```
-
-This is fire-and-forget — if emission fails (no server configured), the context.env file still provides local fallback.
-
-<verification>
-`.raise/rai/sessions/$RAISE_CC_SESSION_ID/context.env` contains `RAISE_SESSION_JIRA_KEY={story_key}` (other keys preserved).
-`session_bind` event emitted (or skipped silently if no server).
-</verification>
 
 ### Step 4: Present Next Steps
 
@@ -238,19 +150,17 @@ Show the developer:
 | Item | Destination |
 |------|-------------|
 | Story branch | `story/s{N}.{M}/{slug}` from `{dev_branch}` |
-| User Story | `stories/s{N}.{M}-story.md` (local) + docs adapter (type: story) |
+| User Story | `stories/s{N}.{M}-story.md` (Connextra + Gherkin AC) |
 | Scope commit | On story branch |
 | Backlog update | via `rai backlog transition` (best-effort) |
-| Signal | WorkLifecycle event emitted (start on entry, complete here) |
-
-```bash
-rai signal emit-work story "{story_id}" --event complete --phase init 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
+| Next | `/rai-story-design` |
 
 ## Quality Checklist
 
+- [ ] Story branch created from `{dev_branch}` (never from an epic branch)
+- [ ] User Story created from `templates/story.md` (Connextra + Gherkin AC)
+- [ ] Scope commit documents in/out boundaries and done criteria
+- [ ] Story listed in epic scope document (if part of an epic)
 - [ ] NEVER create story branch from anything other than `{dev_branch}`
 
 ## References
@@ -258,4 +168,4 @@ rai signal emit-work story "{story_id}" --event complete --phase init 2>/dev/nul
 - Next: `/rai-story-design` (always — PAT-186)
 - Complement: `/rai-story-close`
 - Epic scope: `work/epics/e{N}-{name}/scope.md`
-- Branch model: `AGENTS.md` § Branch Model
+- Branch model: `CLAUDE.md` § Branch Model

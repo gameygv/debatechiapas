@@ -1,12 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-description: Scan codebase, extract symbols, and build knowledge graph. Use for codebase
-  discovery.
+description: 'Run the full codebase discovery pipeline: detect languages, extract
+  symbols, describe components, generate architecture docs, and build the knowledge
+  graph.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -117,73 +114,13 @@ No symbols extracted → verify language is supported and path is correct.
 
 ### Step 4: Document (HITL)
 
-**Module docs:** For each module, publish to local path and docs adapter via:
+**Module docs:** For each module, write `governance/architecture/modules/{name}.md` with YAML frontmatter (type, name, purpose, status, depends_on, depended_by, components) and body (Purpose, Architecture, Key Files, Dependencies, Conventions). Detect modules by language: Python (`__init__.py`), C# (`.csproj` + namespaces), PHP (`composer.json` PSR-4).
 
-```bash
-rai docs write architecture-module \
-  --title "{name}" \
-  --stdin \
-  --output-path governance/architecture/modules/{name}.md << 'EOF'
----
-type: module
-name: {name}
-purpose: {purpose}
-status: active
-depends_on: [{deps}]
-depended_by: [{rev_deps}]
-components: {count}
----
-
-## Purpose
-{why this module exists}
-
-## Architecture
-{structure, key abstractions}
-
-## Key Files
-{important files and their roles}
-
-## Dependencies
-{what it imports and why}
-
-## Conventions
-{patterns specific to this module}
-EOF
-```
-
-Detect modules by language: Python (`__init__.py`), C# (`.csproj` + namespaces), PHP (`composer.json` PSR-4).
-
-**System docs:** Generate 4 docs via CLI:
-
-```bash
-rai docs write architecture-system-context \
-  --title "{project}: system context" \
-  --stdin \
-  --output-path governance/architecture/system-context.md << 'EOF'
-[what, who, why, external systems, external interfaces table]
-EOF
-
-rai docs write architecture-system-design \
-  --title "{project}: system design" \
-  --stdin \
-  --output-path governance/architecture/system-design.md << 'EOF'
-[layers, data flows, constraints — YAML frontmatter type: architecture_design]
-EOF
-
-rai docs write architecture-domain-model \
-  --title "{project}: domain model" \
-  --stdin \
-  --output-path governance/architecture/domain-model.md << 'EOF'
-[bounded contexts, context map]
-EOF
-
-rai docs write architecture-index \
-  --title "{project}: architecture index" \
-  --stdin \
-  --output-path governance/architecture/index.md << 'EOF'
-[compact overview <2K tokens]
-EOF
-```
+**System docs:** Generate 4 docs from governance + discovery data:
+- `system-context.md` — what, who, why, external systems (from `vision.md`)
+- `system-design.md` — layers, data flows, constraints (from `guardrails.md` + module deps)
+- `domain-model.md` — bounded contexts, context map (from module deps + components)
+- `index.md` — compact overview <2K tokens (system overview, module map, key constraints)
 
 Present for review.
 
@@ -195,9 +132,8 @@ Module docs + system docs generated. Prose explains WHY, not just WHAT.
 
 ```bash
 rai graph build
+rai graph query "module dependencies"
 ```
-
-Then use `raise_graph_query` MCP tool with query="module dependencies". If MCP tools are not available, fall back to: `rai graph query "module dependencies"`
 
 Verify module nodes in graph, no stale references. Present summary: project, components by tier, modules, graph node/edge counts.
 
@@ -211,8 +147,8 @@ Graph built. Module nodes present.
 |------|-------------|
 | Context file | `work/discovery/context.yaml` |
 | Component catalog | `work/discovery/components-validated.json` |
-| Module docs | `governance/architecture/modules/*.md` (local) + docs adapter (type: architecture-module) |
-| System docs | `governance/architecture/*.md` (local, routing pending) |
+| Module docs | `governance/architecture/modules/*.md` |
+| System docs | `governance/architecture/*.md` |
 | Knowledge graph | `.raise/rai/memory/index.json` |
 | Next | `/rai-session-start` or `/rai-project-onboard` |
 

@@ -1,12 +1,10 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Grep
-- Glob
-- Bash(rai:*)
-description: Discover conventions and set up governance. Use after rai init --detect
-  on existing code.
+description: 'Guide brownfield project onboarding through discovery and conversation.
+  Analyzes existing codebase, detects conventions, fills governance templates with
+  discovered and conversational content, and builds the knowledge graph. Use after
+  rai init --detect on an existing project.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -97,33 +95,13 @@ All governance fields covered (from discovery + docs + conversation).
 
 ### Step 4: Write 6 Governance Docs
 
-Same parser contracts as `/rai-project-create`. Publish each doc via CLI:
-
-```bash
-rai docs write project-vision --title "{project}: vision" --stdin --output-path governance/vision.md << 'EOF'
-[outcomes table | **{Bold Name}** | {description} |]
-EOF
-
-rai docs write project-prd --title "{project}: PRD" --stdin --output-path governance/prd.md << 'EOF'
-[requirements as ### RF-XX: Title]
-EOF
-
-rai docs write project-guardrails --title "{project}: guardrails" --stdin --output-path governance/guardrails.md << 'EOF'
-[MERGE detected conventions — YAML frontmatter type: guardrails, table | ID | Level | Guardrail | Verification | Derived from |]
-EOF
-
-rai docs write project-backlog --title "{project}: backlog" --stdin --output-path governance/backlog.md << 'EOF'
-[# Backlog: {name}, epic rows | E{N} | ... |]
-EOF
-
-rai docs write architecture-system-context --title "{project}: system context" --stdin --output-path governance/architecture/system-context.md << 'EOF'
-[external interfaces table]
-EOF
-
-rai docs write architecture-system-design --title "{project}: system design" --stdin --output-path governance/architecture/system-design.md << 'EOF'
-[components from DISCOVERED modules — YAML frontmatter type: architecture_design, layers as list of dicts]
-EOF
-```
+Same parser contracts as `/rai-project-create`:
+- `vision.md`: `| **{Bold Name}** | {description} |`
+- `prd.md`: `### RF-XX: Title`
+- `guardrails.md`: MERGE detected conventions (don't overwrite), YAML frontmatter `type: guardrails`
+- `backlog.md`: `# Backlog: {name}`, `| E{N} | ... |`
+- `system-context.md`: external interfaces table
+- `system-design.md`: components from DISCOVERED modules (enriched by discovery)
 
 Update `.raise/manifest.yaml` with branch configuration.
 

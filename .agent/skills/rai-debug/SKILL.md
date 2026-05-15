@@ -1,13 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Write
-- Grep
-- Glob
-- Bash
-description: Find root cause using 5 Whys, Ishikawa, Gemba. Use when encountering
-  errors or defects.
+description: 'Systematic root cause analysis using lean methods (5 Whys, Ishikawa,
+  Gemba). Use when encountering unexpected behavior, errors, or defects to find and
+  fix the true root cause rather than symptoms.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -133,7 +129,7 @@ Prevention (choose what applies):
 - Regression test (always for S+)
 - Input validation at boundary
 - Documentation or ADR update
-- `raise_pattern_add` MCP tool (or `rai pattern add` CLI) for recurring systemic issues
+- `rai pattern add` for recurring systemic issues
 
 <verification>
 Problem resolved. Tests pass.
@@ -145,7 +141,7 @@ Fix incomplete → document partial fix, create follow-up task.
 
 **Feed `/rai-story-plan`** — after fixing, name the tasks explicitly:
 - Fix task, regression test task, prevention task (if any)
-- Systemic finding: use `raise_pattern_add` MCP tool with content="[statement]", context="[keywords]", pattern_type="process". CLI fallback: `rai pattern add "[statement]" --context "[keywords]" --type process`
+- Systemic finding: `rai pattern add "[statement]" --context "[keywords]" --type process`
 
 ## Output
 

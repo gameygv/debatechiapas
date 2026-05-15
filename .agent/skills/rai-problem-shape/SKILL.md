@@ -1,11 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Grep
-- Glob
-- Bash(rai:*)
-description: Shape a vague idea into a problem brief. Use before epic design for new
-  initiatives.
+description: 'Guided problem definition at portfolio level. Takes a vague business
+  idea and shapes it into a well-formed problem statement before it enters the epic
+  pipeline. Produces a Problem Brief that feeds /rai-epic-design.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -108,46 +106,17 @@ Concrete early signal identified.
 
 Draft SAFe hypothesis: `Si [estado actual], entonces [early signal] para [stakeholder], medido por [métrica].`
 
-Present to stakeholder for corrections. Persist to local path and Confluence via:
-
-```bash
-rai docs write proposal \
-  --title "{slug} — Problem Brief {YYYY-MM-DD}" \
-  --stdin \
-  --output-path work/problem-briefs/{slug}-{YYYY-MM-DD}.md << 'EOF'
-# {slug} — Problem Brief
-
-**Fecha:** {YYYY-MM-DD}
-
-## 1. Dominio
-{domain}
-
-## 2. Para quién
-{stakeholder}
-
-## 3. Estado actual
-{gap}
-
-## 4. Causa raíz (3 Whys)
-{root_cause}
-
-## 5. Señal temprana (4 semanas)
-{early_signal}
-
-## 6. Hipótesis
-Si {estado_actual}, entonces {early_signal} para {stakeholder}, medido por {métrica}.
-EOF
-```
+Present to stakeholder for corrections. Save to `work/problem-briefs/{slug}-{YYYY-MM-DD}.md` with all 6 sections.
 
 <verification>
-Brief persisted locally and published via docs adapter. Stakeholder confirmed hypothesis.
+Brief saved. Stakeholder confirmed hypothesis.
 </verification>
 
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| Problem Brief | `work/problem-briefs/{slug}-{YYYY-MM-DD}.md` (local) + docs adapter (type: proposal) |
+| Problem Brief | `work/problem-briefs/{slug}-{YYYY-MM-DD}.md` |
 | Next | `/rai-epic-design` (loads Brief at Step 0.7) |
 
 ## Quality Checklist

@@ -1,12 +1,9 @@
 ---
-allowed-tools:
-- Read
-- Edit
-- Write
-- Grep
-- Glob
-- Bash(rai:*)
-description: Sync module docs with knowledge graph. Use when architecture docs drift.
+description: 'Compare knowledge graph against module architecture docs and update
+  drifted fields. Deterministic frontmatter comparison using existing rai graph commands,
+  with inference for narrative sections. HITL before any writes.
+
+  '
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -57,7 +54,9 @@ Module list identified for comparison.
 
 ### Step 2: Compare Frontmatter Per Module
 
-Use `raise_graph_context` MCP tool with module_id="mod-{name}". If MCP tools are not available, fall back to: `rai graph context mod-{name} --format json`
+```bash
+rai graph context mod-{name} --format json
+```
 
 Compare doc-declared vs code-truth:
 
@@ -110,31 +109,18 @@ If any changes applied:
 rai graph build
 ```
 
-For each module updated in this run, re-publish to docs adapter:
-
-```bash
-rai docs write architecture-module \
-  --title "{name}" \
-  --stdin \
-  --output-path governance/architecture/modules/{name}.md << EOF
-$(cat governance/architecture/modules/{name}.md)
-EOF
-```
-
-Note: heredoc without quotes so `$(cat ...)` expands the updated file content.
-
 Present summary: modules checked, frontmatter updated, narrative updated, graph rebuilt.
 
 <verification>
-Graph reflects updated docs. Updated modules published via docs adapter. Coherence loop closed.
+Graph reflects updated docs. Coherence loop closed.
 </verification>
 
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| Updated frontmatter | `governance/architecture/modules/*.md` (local) + docs adapter (type: architecture-module) |
-| Narrative changes | `governance/architecture/modules/*.md` (with HITL) + docs adapter |
+| Updated frontmatter | `governance/architecture/modules/*.md` |
+| Narrative changes | `governance/architecture/modules/*.md` (with HITL) |
 | Summary | Displayed |
 
 ## Quality Checklist
@@ -151,4 +137,4 @@ Graph reflects updated docs. Updated modules published via docs adapter. Coheren
 - ADR-025: Incremental Coherence — Graph Diffing and AI-Driven Doc Regeneration
 - Module docs: `governance/architecture/modules/*.md`
 - Graph: `.raise/rai/memory/index.json`
-- Graph context: `raise_graph_context` MCP tool (or `rai graph context mod-{name} --format json`)
+- Graph context: `rai graph context mod-{name} --format json`
