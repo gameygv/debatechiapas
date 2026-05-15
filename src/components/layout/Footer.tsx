@@ -48,7 +48,7 @@ const Footer = () => {
                         </p>
                         <div className="flex gap-4 pt-2">
                             <a
-                                href="https://www.facebook.com/MoyMontes"
+                                href="https://www.facebook.com/DebateChiapasNoticias"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-white hover:text-[#fe4641] transition-colors">

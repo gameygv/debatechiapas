@@ -70,7 +70,7 @@ const Header = () => {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
           {/* Social Icons */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="https://www.facebook.com/MoyMontes" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.facebook.com/DebateChiapasNoticias" target="_blank" rel="noopener noreferrer"
               className="text-gray-500 hover:text-[#fe4641] transition-colors" title="Facebook">
               <Facebook size={20} />
             </a>

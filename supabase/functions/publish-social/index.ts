@@ -26,7 +26,7 @@ serve(async (req) => {
       slug: article.slug,
       excerpt: article.excerpt || '',
       featured_image: article.featured_image,
-      url: `https://debatechiapas.dockerapps.top/noticias/${article.slug}`,
+      url: `https://debatechiapas.com/noticias/${article.slug}`,
       published_at: article.published_at,
       timestamp: new Date().toISOString()
     };
