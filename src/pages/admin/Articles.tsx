@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   File,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -469,6 +470,19 @@ const Articles = () => {
                               <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Sin sección</span>
                             )}
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = `https://debatechiapas.com/noticias/${article.slug}`;
+                              navigator.clipboard.writeText(url);
+                              toast.success('Link copiado');
+                            }}
+                            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary mt-0.5 cursor-pointer"
+                            title="Copiar link"
+                          >
+                            <LinkIcon size={10} />
+                            <span className="truncate max-w-[200px]">debatechiapas.com/noticias/{article.slug}</span>
+                          </button>
                         </div>
                       </div>
                     </td>

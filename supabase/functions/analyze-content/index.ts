@@ -18,9 +18,9 @@ serve(async (req) => {
       throw new Error('Title and content are required')
     }
 
-    const apiKey = Deno.env.get('OPENAI_API_KEY')
+    const apiKey = Deno.env.get('OPENROUTER_API_KEY')
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY not configured')
+      throw new Error('OPENROUTER_API_KEY not configured')
     }
 
     // 1. Obtener categorías disponibles de la DB
@@ -59,7 +59,7 @@ serve(async (req) => {
     }`;
 
     // OpenAI API Request
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
