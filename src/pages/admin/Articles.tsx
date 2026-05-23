@@ -66,6 +66,7 @@ const Articles = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [pushingId, setPushingId] = useState<string | null>(null);
   const [generatingMetaId, setGeneratingMetaId] = useState<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<Record<string, { status: string; attempts: number; error_message?: string }>>({});
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   
@@ -179,6 +180,26 @@ const Articles = () => {
       if (error) throw error;
       setArticles(data || []);
       setTotalCount(count || 0);
+
+      // Cargar estado de cola para estos artículos
+      if (data && data.length > 0) {
+        const articleIds = data.map((a: any) => a.id);
+        const { data: queueItems } = await supabase
+          .from('social_queue')
+          .select('article_id, status, attempts, error_message')
+          .in('article_id', articleIds)
+          .order('created_at', { ascending: false });
+
+        if (queueItems) {
+          const statusMap: Record<string, { status: string; attempts: number; error_message?: string }> = {};
+          for (const item of queueItems) {
+            if (!statusMap[item.article_id]) {
+              statusMap[item.article_id] = { status: item.status, attempts: item.attempts, error_message: item.error_message || undefined };
+            }
+          }
+          setQueueStatus(statusMap);
+        }
+      }
     } catch (error) {
       console.error('Error fetching articles:', error);
       toast.error('No se pudieron cargar los artículos');
@@ -282,15 +303,13 @@ const Articles = () => {
   const handleSocialPush = async (id: string, title: string) => {
     setPushingId(id);
     try {
-      const { error } = await supabase.functions.invoke('publish-social', {
+      const { data, error } = await supabase.functions.invoke('publish-social', {
         body: { articleId: id }
       });
 
       if (error) throw error;
-      toast.success(`"${title}" enviado a redes sociales`);
-      setArticles(prev => prev.map(a => 
-        a.id === id ? { ...a, last_social_push: new Date().toISOString() } : a
-      ));
+      toast.success(`"${title}" en cola de publicación`);
+      setQueueStatus(prev => ({ ...prev, [id]: { status: 'pending', attempts: 0 } }));
 
     } catch (error: any) {
       toast.error(error.message);
@@ -542,24 +561,50 @@ const Articles = () => {
                     {/* Redes */}
                     <td className="px-6 py-4 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        {article.last_social_push ? (
-                           <Tooltip>
-                             <TooltipTrigger>
-                                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 cursor-help">Enviado</Badge>
-                             </TooltipTrigger>
-                             <TooltipContent>{format(new Date(article.last_social_push), 'dd MMM HH:mm', { locale: es })}</TooltipContent>
-                           </Tooltip>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-400 border-dashed">Pendiente</Badge>
-                        )}
-                        
-                        <Button 
-                          variant="ghost" size="sm" 
+                        {(() => {
+                          const qs = queueStatus[article.id];
+                          if (qs?.status === 'published' || article.last_social_push) {
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100 hover:bg-green-100 cursor-help">Publicado</Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>{article.last_social_push ? format(new Date(article.last_social_push), 'dd MMM HH:mm', { locale: es }) : 'Publicado'}</TooltipContent>
+                              </Tooltip>
+                            );
+                          }
+                          if (qs?.status === 'pending' || qs?.status === 'processing') {
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100 cursor-help">
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1 inline" />En cola
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>Intento {qs.attempts} — se publicará automáticamente</TooltipContent>
+                              </Tooltip>
+                            );
+                          }
+                          if (qs?.status === 'failed') {
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant="destructive" className="cursor-help">Error</Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">{qs.error_message || 'Error al publicar'} (intentos: {qs.attempts})</TooltipContent>
+                              </Tooltip>
+                            );
+                          }
+                          return <Badge variant="outline" className="text-gray-400 border-dashed">Sin enviar</Badge>;
+                        })()}
+
+                        <Button
+                          variant="ghost" size="sm"
                           className="h-6 text-[10px] text-muted-foreground hover:text-primary"
-                          disabled={pushingId === article.id || article.status !== 'published' || isScheduled}
+                          disabled={pushingId === article.id || article.status !== 'published' || isScheduled || queueStatus[article.id]?.status === 'pending' || queueStatus[article.id]?.status === 'processing'}
                           onClick={() => handleSocialPush(article.id, article.title)}
                         >
-                          {pushingId === article.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <div className="flex items-center gap-1"><Share2 className="h-3 w-3" /> Publicar</div>}
+                          {pushingId === article.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <div className="flex items-center gap-1"><Share2 className="h-3 w-3" /> {queueStatus[article.id]?.status === 'failed' ? 'Reintentar' : 'Publicar'}</div>}
                         </Button>
                       </div>
                     </td>
