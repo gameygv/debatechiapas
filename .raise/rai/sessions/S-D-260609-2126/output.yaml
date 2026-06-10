@@ -1,0 +1,90 @@
+session_id: "S-D-260609-2126"
+summary: "Restauración post-DDoS: DNS, Supabase URL, imágenes + verificación Make.com API"
+type: maintenance
+outcomes:
+  - "DNS de debatechiapas.com corregido: A record en cpanel-hw apuntaba a 64.20.41.54 (WordPress viejo), cambiado a 76.76.21.61 (Vercel)"
+  - "URL de Supabase en client.ts revertida de supabase-api.hostingwarlock.com a debatechiapas.supabase.poesis.net"
+  - "109 URLs de hostingwarlock corregidas en DB: 52 articles.featured_image, 2 daily_editions.pdf_url, 2 daily_editions.cover_image_url, 53 media_files.original_url"
+  - "Zona DNS en da-poesis también corregida (backup, no es la autoritativa)"
+  - "Verificación real de publicación social via Make.com API implementada: nuevo status 'sent', 3 fases (verify/dosify/send)"
+  - "Escenario Make.com reactivado, artículo de hoy en cola"
+patterns:
+  - description: "cpanel-hw (hostingwarlock.com) es el NS autoritativo de debatechiapas.com, NO da-poesis"
+    context: "dns,infrastructure"
+    type: process
+  - description: "Cambios masivos de URL durante emergencias (DDoS) pueden afectar código fuente, env vars de Vercel, Y datos en DB — revisar los 3"
+    context: "incident-response,data-integrity"
+    type: process
+  - description: "Make.com API v2 logs endpoint permite verificar estado real de ejecuciones: status 1=ok, 3=error"
+    context: "make.com,social,integration"
+    type: technical
+corrections:
+  - what: "Múltiples fuentes de verdad para URLs de Supabase"
+    lesson: "El cambio de URL durante el DDoS se propagó a client.ts (código), featured_image (DB), daily_editions (DB) y media_files (DB). Siempre verificar todas las capas."
+coaching:
+  trust_level: "established"
+  autonomy: "high — executed DNS, DB, and code fixes independently"
+  relationship:
+    quality: "productive"
+    trajectory: "stable"
+current_work:
+  release: null
+  epic: null
+  story: null
+  phase: null
+  branch: main
+pending:
+  decisions: []
+  blockers: []
+  next_actions:
+    - "Verificar que el artículo de hoy se publique correctamente con el nuevo flujo sent→published"
+    - "Obtener URLs correctas de Instagram y TikTok para Debate Chiapas (Header.tsx aún tiene moymontess/eldivodechiapas)"
+    - "Considerar migrar DNS de debatechiapas.com a Cloudflare para gestión unificada"
+narrative: |
+  ## Contexto
+  Ataque DDoS ayer afectó múltiples servidores. Durante la remediación en d:/github/servers, se hicieron cambios que rompieron debatechiapas.com.
+
+  ## Problema 1: DNS apuntando a WordPress viejo
+  - debatechiapas.com resolvía a 64.20.41.54 (cpanel-hw, WordPress viejo)
+  - Descubrí que los NS del registrar (ns1/ns2.hostingwarlock.com) apuntan a cpanel-hw, NO a da-poesis
+  - Edité la zona en cpanel-hw (/var/named/debatechiapas.com.db): A record 64.20.41.54 → 76.76.21.61, www CNAME → cname.vercel-dns.com
+  - PowerDNS reiniciado, propagación confirmada
+
+  ## Problema 2: URL de Supabase cambiada
+  - Commit e30196a cambió client.ts de debatechiapas.supabase.poesis.net a supabase-api.hostingwarlock.com
+  - supabase-api.hostingwarlock.com apunta al server correcto pero Kong no rutea ese dominio al stack de debatechiapas
+  - Revertido en commit 00ac76a, redesplegado en Vercel
+
+  ## Problema 3: Imágenes rotas
+  - 109 registros en DB tenían URLs con supabase-api.hostingwarlock.com
+  - Corregidos via UPDATE con REPLACE en: articles, daily_editions, media_files
+
+  ## Problema 4: supabase-poesis temporalmente caído
+  - Server 23.189.168.140 no respondía (consecuencia del DDoS)
+  - Se recuperó solo — contenedores reiniciaron automáticamente
+
+  ## Mejora: Verificación Make.com API (punto 5)
+  - Nuevo status 'sent' añadido a social_queue CHECK constraint
+  - Phase 1: verifica items 'sent' contra GET /api/v2/scenarios/4533733/logs
+  - Phase 2: dosificación (15 min)
+  - Phase 3: enviar pendiente, marcar 'sent'
+  - Solo marca 'published' cuando Make.com confirma status=1
+  - Reactivación automática de escenario si webhook retorna 422/400
+  - Badge azul "Verificando" en admin
+
+  ## Archivos modificados
+  - src/integrations/supabase/client.ts — URL de Supabase corregida
+  - src/pages/admin/Articles.tsx — badge para status 'sent'
+  - supabase/functions/process-social-queue/index.ts — documentación del flujo
+  - /opt/supabase/debatechiapas/volumes/functions/main/index.ts (server) — lógica de 3 fases
+  - /var/named/debatechiapas.com.db (cpanel-hw) — zona DNS corregida
+  - /var/named/debatechiapas.com.db (da-poesis) — zona DNS corregida (backup)
+
+  ## Commits
+  - 00ac76a fix: restaurar URL de Supabase correcta
+  - 970950b feat: verificación de publicación social via Make.com API
+next_session_prompt: |
+  Verificar que el artículo de hoy (10 jun) se publicó correctamente con el nuevo flujo
+  sent→published. Revisar Make.com logs para confirmar que la verificación funciona.
+  Pedir a Gamey las URLs de Instagram y TikTok de Debate Chiapas para corregir Header.tsx.
+  Considerar si vale la pena migrar el DNS de debatechiapas.com de cpanel-hw a Cloudflare.
