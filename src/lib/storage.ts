@@ -8,9 +8,10 @@ export interface UploadResult {
 }
 
 /**
- * Convierte un archivo de imagen a formato WebP y lo redimensiona a máx 1080px de ancho
+ * Convierte un archivo de imagen a JPEG y lo redimensiona a máx 1080px de ancho.
+ * JPEG en lugar de WebP para compatibilidad con Facebook/redes sociales.
  */
-async function convertImageToWebP(file: File): Promise<File> {
+async function convertImageToJPEG(file: File): Promise<File> {
   // Si no es imagen, retornar original (ej. videos)
   if (!file.type.startsWith('image/')) {
     return file;
@@ -49,16 +50,16 @@ async function convertImageToWebP(file: File): Promise<File> {
       
       canvas.toBlob((blob) => {
         if (!blob) {
-          reject(new Error('Could not convert to WebP'));
+          reject(new Error('Could not convert to JPEG'));
           return;
         }
-        // Crear nuevo archivo WebP
-        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
-          type: 'image/webp',
+        // Crear nuevo archivo JPEG
+        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+          type: 'image/jpeg',
           lastModified: Date.now(),
         });
         resolve(newFile);
-      }, 'image/webp', 0.85); // 85% calidad
+      }, 'image/jpeg', 0.85); // 85% calidad
     };
     
     img.onerror = (error) => {
@@ -78,9 +79,9 @@ export async function uploadImageToStorage(
   folder: string = 'articles'
 ): Promise<UploadResult> {
   try {
-    // Convertir a WebP y Redimensionar si es imagen
+    // Convertir a JPEG y Redimensionar si es imagen
     const isImage = file.type.startsWith('image/');
-    const finalFile = isImage ? await convertImageToWebP(file) : file;
+    const finalFile = isImage ? await convertImageToJPEG(file) : file;
     
     // Determinar extensión y tipo
     const fileExt = finalFile.name.split('.').pop();
@@ -170,7 +171,7 @@ export async function downloadAndUploadImage(
 
     console.log('Image downloaded successfully, uploading to storage...');
 
-    // Upload to storage (automatically converts to WebP and Resizes)
+    // Upload to storage (automatically converts to JPEG and Resizes)
     return await uploadImageToStorage(file, folder);
   } catch (error) {
     console.error('Error downloading and uploading image:', error);
