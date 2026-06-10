@@ -573,6 +573,18 @@ const Articles = () => {
                               </Tooltip>
                             );
                           }
+                          if (qs?.status === 'sent') {
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 cursor-help">
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1 inline" />Verificando
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>Enviado a Make.com — verificando publicación en Facebook</TooltipContent>
+                              </Tooltip>
+                            );
+                          }
                           if (qs?.status === 'pending' || qs?.status === 'processing') {
                             return (
                               <Tooltip>
@@ -601,7 +613,7 @@ const Articles = () => {
                         <Button
                           variant="ghost" size="sm"
                           className="h-6 text-[10px] text-muted-foreground hover:text-primary"
-                          disabled={pushingId === article.id || article.status !== 'published' || isScheduled || queueStatus[article.id]?.status === 'pending' || queueStatus[article.id]?.status === 'processing'}
+                          disabled={pushingId === article.id || article.status !== 'published' || isScheduled || queueStatus[article.id]?.status === 'pending' || queueStatus[article.id]?.status === 'processing' || queueStatus[article.id]?.status === 'sent'}
                           onClick={() => handleSocialPush(article.id, article.title)}
                         >
                           {pushingId === article.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <div className="flex items-center gap-1"><Share2 className="h-3 w-3" /> {queueStatus[article.id]?.status === 'failed' ? 'Reintentar' : 'Publicar'}</div>}
