@@ -1,3 +1,4 @@
 {"id": "PAT-D-001", "type": "process", "content": "cpanel-hw (hostingwarlock.com) es el NS autoritativo de debatechiapas.com, NO da-poesis", "context": ["dns", "infrastructure"], "learned_from": "SES-004", "created": "2026-06-09"}
 {"id": "PAT-D-002", "type": "process", "content": "Cambios masivos de URL durante emergencias (DDoS) pueden afectar c\u00f3digo fuente, env vars de Vercel, Y datos en DB \u2014 revisar los 3", "context": ["incident-response", "data-integrity"], "learned_from": "SES-004", "created": "2026-06-09"}
 {"id": "PAT-D-003", "type": "technical", "content": "Make.com API v2 logs endpoint permite verificar estado real de ejecuciones: status 1=ok, 3=error", "context": ["make.com", "social", "integration"], "learned_from": "SES-004", "created": "2026-06-09"}
+{"id": "PAT-D-004", "type": "process", "content": "facebook-rate-limit-recovery", "context": [""], "learned_from": "SES-005", "created": "2026-06-13"}
