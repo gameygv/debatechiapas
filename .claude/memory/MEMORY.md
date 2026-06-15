@@ -1,0 +1,3 @@
+- [Supabase en supabase.poesis.net](infra_supabase_server.md) — Todas las Supabase están en supabase.poesis.net, NO en EasyPanel
+- [Make.com webhook compartido](project_make_config.md) — Escenario "Integration Webhooks" publica en 7 páginas de Facebook
+- [IA usa OpenRouter](project_ai_config.md) — Edge functions usan OPENROUTER_API_KEY, no OpenAI directo
