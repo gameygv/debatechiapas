@@ -736,6 +736,9 @@ async function handle_delete_user(req: Request): Promise<Response> {
 
 const MAKE_WEBHOOK_URL = Deno.env.get('MAKE_WEBHOOK_URL') ?? '';
 const MAKE_API_KEY = Deno.env.get('MAKE_API_KEY') ?? '';
+// Token con acceso al API de Make (scenarios/logs/start). El MAKE_API_KEY del
+// webhook NO tiene scope de API para el escenario 4533733; usar este para REST.
+const MAKE_API_TOKEN = Deno.env.get('MAKE_API_TOKEN') ?? MAKE_API_KEY;
 const MAKE_SCENARIO_ID = '4533733';
 
 async function handle_publish_social(req: Request): Promise<Response> {
@@ -1048,7 +1051,7 @@ async function handle_process_social_queue(req: Request): Promise<Response> {
     try {
       const scRes = await fetch(
         'https://us1.make.com/api/v2/scenarios/' + MAKE_SCENARIO_ID,
-        { headers: { 'Authorization': 'Token ' + MAKE_API_KEY } }
+        { headers: { 'Authorization': 'Token ' + MAKE_API_TOKEN } }
       );
       if (scRes.ok) {
         const scData = await scRes.json();
@@ -1056,7 +1059,7 @@ async function handle_process_social_queue(req: Request): Promise<Response> {
         if (sc.isActive === false || sc.isPaused === true) {
           await fetch('https://us1.make.com/api/v2/scenarios/' + MAKE_SCENARIO_ID + '/start', {
             method: 'POST',
-            headers: { 'Authorization': 'Token ' + MAKE_API_KEY, 'Content-Type': 'application/json' }
+            headers: { 'Authorization': 'Token ' + MAKE_API_TOKEN, 'Content-Type': 'application/json' }
           });
           console.log('[social-queue] Make.com scenario was stopped — restart requested');
         }
@@ -1079,7 +1082,7 @@ async function handle_process_social_queue(req: Request): Promise<Response> {
       try {
         const logsRes = await fetch(
           'https://us1.make.com/api/v2/scenarios/' + MAKE_SCENARIO_ID + '/logs?pg%5Blimit%5D=20&pg%5BsortDir%5D=desc',
-          { headers: { 'Authorization': 'Token ' + MAKE_API_KEY } }
+          { headers: { 'Authorization': 'Token ' + MAKE_API_TOKEN } }
         );
         if (logsRes.ok) {
           const logsData = await logsRes.json();
@@ -1260,7 +1263,7 @@ async function handle_process_social_queue(req: Request): Promise<Response> {
         try {
           await fetch('https://us1.make.com/api/v2/scenarios/' + MAKE_SCENARIO_ID + '/start', {
             method: 'POST',
-            headers: { 'Authorization': 'Token ' + MAKE_API_KEY, 'Content-Type': 'application/json' }
+            headers: { 'Authorization': 'Token ' + MAKE_API_TOKEN, 'Content-Type': 'application/json' }
           });
         } catch (_) {}
       }
