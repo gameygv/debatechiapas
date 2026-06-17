@@ -38,38 +38,17 @@ Evaluate whether code is **necessary and proportional** using Beck's four rules 
 
 ## Steps
 
-### Step 0: Instrument
-
-```bash
-rai signal emit-work story "{story_id}" --event start --phase architecture-review 2>/dev/null || true
-```
-
 ### Step 1: Load Design Context & Patterns
 
 Before reviewing code, load what the design intended and what the codebase has learned:
 
-1. **Code orientation**: Load SA-ranked code symbols for the current branch:
-   ```bash
-   rai session context -s code_context -p .
-   ```
-   Returns ~20 symbols ranked by structural proximity to active work modules. Empty result is valid. Use these as starting points — not exhaustive scope.
-2. **Read the design doc** (`design.md` or `scope.md`) — what was the intended approach?
-3. **Query the knowledge graph** for patterns in affected modules using `raise_graph_query` MCP tool with query="patterns for {affected_modules}" and `raise_pattern_query` MCP tool with keywords="{module_keywords}".
-
-   If MCP tools are not available, fall back to:
+1. **Read the design doc** (`design.md` or `scope.md`) — what was the intended approach?
+2. **Query the knowledge graph** for patterns in affected modules:
    ```bash
    rai graph query "patterns for {affected_modules}" --types pattern
    rai pattern list --context "{module_keywords}"
    ```
-4. **Load established patterns** (PAT-E-*) — these are proven solutions. Deviations need justification.
-
-> **JIT**: For deeper code exploration beyond the orientation map, query the graph directly:
-> ```bash
-> rai graph query "symbol_name" --types symbol --limit 10
-> rai graph query "module_name" --module mod-session
-> rai graph query "callers of function_name" --types symbol
-> ```
-> Use `--file path/to/file.py` to scope results to a specific file.
+3. **Load established patterns** (PAT-E-*) — these are proven solutions. Deviations need justification.
 
 This context informs every subsequent step: you can't judge proportionality without knowing intent, and you can't catch regressions without knowing established patterns.
 
@@ -120,22 +99,7 @@ When a heuristic triggers, check: "Does the design doc justify this?" If yes, no
 | H11 | Change Reason Count | Module changes for >1 unrelated reason |
 | H12 | Import Fan-In | File imports from 5+ distinct packages for one function |
 
-### Step 6: Agent-Authored Drift Audit
-
-Check for agent-specific drift patterns at both story and epic scope. Reference `governance/drift-catalog.md` §1 for full definitions — do not copy inline.
-
-| # | Heuristic | Signal |
-|---|-----------|--------|
-| AG1 | Authorization fan-out | Auth-related changes touching ≥3 downstream modules without a consolidating aggregator |
-| AG2 | Clone amplification | Duplicate logic blocks in ≥2 new locations relative to surrounding modules |
-| AG3 | Hallucinated-API residue | Symbol references that don't resolve; persistent across ≥2 commits |
-| AG4 | Context-window planning | Fan-out of modified set has orphan edges — modules touched but not reconciled |
-| AG5 | Vulnerability density | CWE-class patterns in agent-authored hunks (auth, injection, secrets) |
-| AG6 | Over-specification | Conditionals keyed on literal constants from prompt examples; re-implementation of existing capability |
-
-"No agent-authored drift detected" is always valid — do not invent findings.
-
-### Step 7: Systemic Audit (Epic Scope Only)
+### Step 6: Systemic Audit (Epic Scope Only)
 
 Skip for story scope. Cross-module heuristics:
 
@@ -146,7 +110,7 @@ Skip for story scope. Cross-module heuristics:
 | H15 | Cyclic Dependencies | Circular import paths between modules |
 | H16 | Shotgun Surgery | One logical change touches 5+ files across 3+ directories |
 
-### Step 8: Lean Compliance Audit
+### Step 7: Lean Compliance Audit
 
 Verify the implementation follows the lean principles established in design:
 
@@ -160,7 +124,7 @@ Verify the implementation follows the lean principles established in design:
 
 For each L-finding: cite the pattern or design decision that was violated.
 
-### Step 9: Present Findings
+### Step 8: Present Findings
 
 ```markdown
 ## Architecture Review: {id} (scope: {story|epic})
@@ -175,10 +139,6 @@ For each L-finding: cite the pattern or design decision that was violated.
 
 Every finding: specific file:line, heuristic ID, proportionality concern, concrete simplification.
 
-<verification>
-Verdict rendered (PASS / PASS WITH QUESTIONS / SIMPLIFY). All critical findings addressed or acknowledged by developer. Signal emitted.
-</verification>
-
 ## Output
 
 | Item | Destination |
@@ -187,16 +147,12 @@ Verdict rendered (PASS / PASS WITH QUESTIONS / SIMPLIFY). All critical findings 
 | Verdict | PASS, PASS WITH QUESTIONS, or SIMPLIFY |
 | Next | `/rai-story-review` (story) or `/rai-epic-close` (epic) |
 
-```bash
-rai signal emit-work story "{story_id}" --event complete --phase architecture-review 2>/dev/null || true
-```
-
 ## Quality Checklist
 
 - [ ] Design doc and graph patterns loaded before reviewing (Step 1)
 - [ ] Project language detected before filtering files
 - [ ] All changed files for detected language read before reviewing
-- [ ] Every finding cites specific file:line and heuristic ID (AG1-AG6, H1-H16, L1-L5)
+- [ ] Every finding cites specific file:line and heuristic ID (H1-H16, L1-L5)
 - [ ] Lean compliance verified: MVP, pattern adherence, no gold-plating
 - [ ] Known patterns (PAT-E-*) checked against implementation
 - [ ] Questions ratio >30% of findings (humility signal)

@@ -49,17 +49,11 @@ Execute the planned fix tasks in strict TDD order: RED (failing regression test)
 
 **When to skip:** Never — even if the fix seems trivial, follow the plan.
 
-**Inputs:** Bug ID, `work/bugs/{issue_key}/plan.md` with atomic tasks.
+**Inputs:** Bug ID, `work/bugs/RAISE-{N}/plan.md` with atomic tasks.
 
 **Expected state:** On bug branch. Plan artifact exists. All current gates pass.
 
 ## Steps
-
-### Step 0: Instrument
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event start --phase fix 2>/dev/null || true
-```
 
 ### Step 1: Execute Tasks in Order
 
@@ -69,16 +63,7 @@ Per task from `plan.md`:
 2. **GREEN** — Write minimal code to make the test pass
 3. **REFACTOR** — Clean up while keeping tests green
 
-**Run ALL four gates** (test + lint + format + type check) after each task via the CLI — **NEVER run the test command directly** (keeps context clean):
-
-```bash
-rai gate check gate-tests --scope {changed_test_path}   # fast check, scoped
-rai gate check gate-lint
-rai gate check gate-format
-rai gate check gate-types
-```
-
-Fall back to `rai gate check gate-tests` (unscoped) only when the scope path is ambiguous.
+**Run ALL four gates** (test + lint + format + type check) after each task. Resolve commands from `.raise/manifest.yaml` or use language defaults.
 
 If verification fails: fix and re-verify (max 3 attempts before escalating).
 
@@ -95,7 +80,7 @@ Per completed task:
 | Condition | Action |
 |-----------|--------|
 | More tasks remain | Return to Step 1 |
-| All tasks complete | Run `rai gate check --all`, present summary |
+| All tasks complete | Run full gate check, present summary |
 | Task blocked | Document blocker, escalate to human |
 
 <verification>
@@ -111,31 +96,18 @@ All tasks committed. All four gates pass. Bug no longer reproduces.
 | Item | Destination |
 |------|-------------|
 | Code + commits | On bug branch |
-
-Transition bug to review status before signaling completion (non-blocking):
-```bash
-rai backlog statuses list --issue-type Bug
-```
-Infer review status: `category=indeterminate` + name contains Review, Revision, Code Review.
-Single candidate → transition silently. Multiple or ambiguous → ask developer. None → skip silently.
-```bash
-rai backlog transition {bug_key} {review_slug}
-```
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event complete --phase fix 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
+| Next | `/rai-bugfix-review` |
 
 ## Quality Checklist
 
-- [ ] TDD cycle followed per Step 1 — RED proves bug, GREEN minimal fix, REFACTOR cleans up while keeping tests green
-- [ ] Regression test not skipped; root cause addressed (not symptoms)
+- [ ] RED test written first (proves bug exists)
+- [ ] GREEN fix is minimal (addresses root cause, not symptoms)
 - [ ] All four gates pass after each task (test, lint, type check, format)
 - [ ] Each task committed independently
 - [ ] Human acknowledged each task before proceeding
 - [ ] Bug no longer reproduces after fix
+- [ ] NEVER skip the regression test — it's the proof
+- [ ] NEVER fix symptoms — address the root cause from analysis
 
 ## References
 

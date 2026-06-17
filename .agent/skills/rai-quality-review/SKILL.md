@@ -38,12 +38,6 @@ Act as an external auditor reviewing code that passed all automated gates. Find 
 
 ## Steps
 
-### Instrument
-
-```bash
-rai signal emit-work story "{story_id}" --event start --phase quality-review 2>/dev/null || true
-```
-
 ### Step 0: Detect Project Language
 
 Determine the primary language and toolchain using this priority chain:
@@ -90,27 +84,12 @@ Read every changed file. You cannot review code you haven't read.
 
 Before auditing for bugs, understand what patterns should have been followed:
 
-1. **Code orientation**: Load SA-ranked code symbols for the current branch:
-   ```bash
-   rai session context -s code_context -p .
-   ```
-   Returns ~20 symbols ranked by structural proximity to active work modules. Empty result is valid. Use these as starting points — not exhaustive scope.
-2. **Query the knowledge graph** for known patterns using `raise_graph_query` MCP tool with query="patterns for {affected_modules}".
-
-   If MCP tools are not available, fall back to:
+1. **Query the knowledge graph** for known patterns in affected modules:
    ```bash
    rai graph query "patterns for {affected_modules}" --types pattern
    ```
-3. **Read the design doc** (if exists) — what approach was intended?
-4. **Check established patterns** (PAT-E-*) — deviations from proven patterns are a quality signal.
-
-> **JIT**: For deeper code exploration beyond the orientation map, query the graph directly:
-> ```bash
-> rai graph query "symbol_name" --types symbol --limit 10
-> rai graph query "module_name" --module mod-session
-> rai graph query "callers of function_name" --types symbol
-> ```
-> Use `--file path/to/file.py` to scope results to a specific file.
+2. **Read the design doc** (if exists) — what approach was intended?
+3. **Check established patterns** (PAT-E-*) — deviations from proven patterns are a quality signal.
 
 Pattern awareness prevents false positives (flagging code that follows a deliberate pattern) and catches real issues (code that ignores a pattern established after a past bug).
 
@@ -120,17 +99,12 @@ Pattern awareness prevents false positives (flagging code that follows a deliber
 
 **Logic correctness:** Inverted conditionals (#1 semantic bug), off-by-one errors, wrong variable in expressions (copy-paste), unhandled edge cases (empty, null/None, zero-length).
 
-**Agent-authored drift residue** (see `governance/drift-catalog.md` §1 for full definitions):
-- **AG3:** Unresolved symbol references — grep for calls to non-existent functions, stale imports, or type refs that never existed
-- **AG5:** Auth/injection patterns in agent-authored hunks — CWE-89 (SQL injection), CWE-79 (XSS), CWE-798 (hardcoded credentials)
-
 #### Language-Specific Checks
 
 **Python:**
 - **Type honesty:** `type: ignore` comments (each is a potential lie), `cast()` honesty, annotations claiming more specific types than runtime provides
 - **Error handling:** Overly broad `except Exception`, swallowed exceptions, missing `raise X from exc`
 - **Idioms:** Mutable default arguments, late binding closures in loops
-- **Drift signals** (see `governance/drift-catalog.md` §1): duplicate logic blocks relative to adjacent modules (AG2); literal-constant conditionals matching prompt examples rather than runtime values (AG6)
 
 **TypeScript/JavaScript:**
 - **Type honesty:** `as` type assertions (bypasses type checking), `any` types (defeats type safety), `@ts-ignore`/`@ts-expect-error` comments
@@ -202,10 +176,6 @@ Classify: **Muda** (waste, recommend deletion) / **Fragile** (breaks on refactor
 
 Every finding: specific file:line, WHY it matters, concrete fix suggestion.
 
-<verification>
-Verdict rendered (PASS / PASS WITH RECOMMENDATIONS / FAIL). Critical findings fixed or acknowledged. Signal emitted.
-</verification>
-
 ## Output
 
 | Item | Destination |
@@ -213,10 +183,6 @@ Verdict rendered (PASS / PASS WITH RECOMMENDATIONS / FAIL). Critical findings fi
 | Review findings | Presented inline, saved if requested |
 | Verdict | PASS, PASS WITH RECOMMENDATIONS, or FAIL |
 | Next | `/rai-story-review` |
-
-```bash
-rai signal emit-work story "{story_id}" --event complete --phase quality-review 2>/dev/null || true
-```
 
 ## Quality Checklist
 

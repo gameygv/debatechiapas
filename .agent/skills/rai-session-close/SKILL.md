@@ -1,8 +1,10 @@
 ---
-description: 'Close a working session by reflecting on outcomes and feeding structured
-  data to CLI. CLI does all writes atomically; skill does inference reflection.
-
-  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Bash(rai:*)
+description: Capture session outcomes and update memory. Use to close a working session.
 license: MIT
 metadata:
   raise.adaptable: 'true'

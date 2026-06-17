@@ -1,24 +1,37 @@
 ---
-description: 'Sequence features from epic-design into an executable plan with milestones,
-  dependencies, and progress tracking. Use after /rai-epic-design to create a realistic
-  implementation roadmap before starting story work.
-
-  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Bash(rai:*)
+description: Sequence epic stories into milestones and dependencies. Use after epic
+  design.
 license: MIT
 metadata:
   raise.adaptable: 'true'
+  raise.aspects: introspection
   raise.fase: '4'
   raise.frequency: per-epic
   raise.gate: ''
   raise.inputs: '- scope: file_path, required, previous_skill
 
     '
+  raise.introspection:
+    affected_modules: []
+    context_source: scope doc from epic-design
+    max_jit_queries: 3
+    max_tier1_queries: 3
+    phase: epic.plan
+    tier1_queries:
+    - sequencing patterns for {strategy} ordering
+    - estimation patterns for {size} epics
+    - milestone patterns for multi-story epics
   raise.next: story-start
   raise.outputs: '- scope: file_path, next_skill
 
     '
   raise.prerequisites: epic-design
-  raise.version: 2.2.0
+  raise.version: 2.4.0
   raise.visibility: public
   raise.work_cycle: epic
 name: rai-epic-plan
@@ -45,6 +58,14 @@ Transform the story list from `/rai-epic-design` into a sequenced implementation
 **Inputs:** Epic scope document (`work/epics/e{N}-{name}/scope.md`), calibration data (if available).
 
 ## Steps
+
+### PRIME (mandatory — do not skip)
+
+Before starting Step 1, you MUST execute the PRIME protocol:
+
+1. **Chain read**: Read epic-design's learning record at `.raise/rai/learnings/rai-epic-design/{work_id}/record.yaml`. Enrich epic-design's record with `downstream: {scope_clear: bool, stories_sequenceable: bool}`.
+2. **Graph query**: Execute tier1 queries from this skill's metadata using `rai graph query`. If graph is unavailable, note and continue.
+3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
 
 ### Step 1: Review Epic Scope
 
@@ -74,6 +95,9 @@ Order stories using these strategies (in priority order):
 
 For each story, document: position, rationale, dependencies (hard/soft/external), what it enables.
 
+> **JIT**: Before choosing sequencing strategy, query graph for ordering patterns and calibration data
+> → `aspects/introspection.md § JIT Protocol`
+
 **Identify parallel opportunities:** Stories with no mutual dependencies, different codebase areas, or independent concerns can run concurrently.
 
 <verification>
@@ -92,6 +116,9 @@ Create 2-4 intermediate checkpoints:
 | **M4: Epic Complete** | Done criteria met | Ready for `/rai-epic-close` |
 
 Per milestone: stories included, success criteria (verifiable), demo capability.
+
+> **JIT**: Before defining milestones, query graph for calibration patterns and checkpoint strategies
+> → `aspects/introspection.md § JIT Protocol`
 
 **Integration checkpoint:** For epics with multiple components (client/server, CLI/API, frontend/backend), schedule an **E2E integration milestone** before the final story. This checkpoint runs real infrastructure (docker compose, actual DB) and verifies cross-story contracts (auth headers, payload schemas, parameter limits). Unit tests with mocks cannot catch these mismatches — only real E2E validates the seams between stories.
 

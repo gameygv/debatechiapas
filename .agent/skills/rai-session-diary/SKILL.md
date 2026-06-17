@@ -5,6 +5,7 @@ allowed-tools:
 - Glob
 - Bash(rai:*)
 - Bash(git:*)
+- Write
 description: Write a narrative session diary entry to Confluence. Use before session
   close.
 license: MIT
@@ -184,40 +185,29 @@ Developer reviewed and approved the content.
 
 ### Step 5: Publish via Adapter
 
-Persist to local path and publish through the docs adapter in one command:
+Save the draft to a temporary file and publish through the docs adapter. The adapter resolves the parent page from routing config (`session-diary` → `Diario de Sesiones`).
 
 ```bash
-rai docs write session-diary \
-  --title "Session Diary — {YYYY-MM-DD}: {Evocative Title}" \
-  --stdin \
-  --output-path work/sessions/{YYYY-MM-DD}-{slug}.md << 'EOF'
-[diary content drafted in Step 3]
-EOF
+rai docs publish session-diary --title "Session Diary — {YYYY-MM-DD}: {Evocative Title}" --file /tmp/session-diary-draft.md
 ```
 
 If the default routing parent needs an override (e.g., a different parent):
 
 ```bash
-rai docs write session-diary \
-  --title "..." \
-  --stdin \
-  --output-path work/sessions/{YYYY-MM-DD}-{slug}.md \
-  --parent {PAGE_ID} << 'EOF'
-[diary content]
-EOF
+rai docs publish session-diary --title "..." --file /tmp/session-diary-draft.md --parent {PAGE_ID}
 ```
 
 Present the URL to the developer.
 
 <verification>
-Diary persisted locally and published via docs adapter. URL confirmed.
+Page published via adapter. URL confirmed. Works with both Confluence and filesystem targets.
 </verification>
 
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| Session diary entry | `work/sessions/{YYYY-MM-DD}-{slug}.md` (local) + docs adapter (type: session-diary) |
+| Session diary entry | Confluence: RaiSE1 / Diario de Sesiones |
 | Next | `/rai-session-close` |
 
 ## Quality Checklist
@@ -229,12 +219,12 @@ Diary persisted locally and published via docs adapter. URL confirmed.
 - [ ] Mistakes and pivots documented honestly
 - [ ] Metrics included for implementation sessions
 - [ ] Developer reviewed before publish
-- [ ] Published via `rai docs write` (adapter resolves target and parent)
+- [ ] Published via `rai docs publish` (adapter resolves target and parent)
 - [ ] NEVER write a changelog — the diary captures *how* we got to decisions
 - [ ] NEVER skip the reflection — it's what distinguishes a diary from a report
 
 ## References
 
-- Routing config: `.raise/docs.yaml` → `session-diary` routing entry (`local_dir: work/sessions`, `naming: dated`)
+- Routing config: `.raise/confluence.yaml` → `session-diary` routing entry
 - Prior entries: 8 entries from SES-224 through SES-E-260402
 - Complement: `/rai-session-close` (run after diary)

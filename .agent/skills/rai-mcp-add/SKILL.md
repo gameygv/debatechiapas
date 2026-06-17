@@ -1,9 +1,12 @@
 ---
-description: 'Guided MCP server registration. Collects intent conversationally, resolves
-  package details, and delegates to `rai mcp install` or `rai mcp scaffold`. Human
-  never constructs CLI commands.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash(rai:*)
+description: Register an MCP server conversationally. Use to add a new MCP integration.
 license: MIT
 metadata:
   raise.adaptable: 'true'

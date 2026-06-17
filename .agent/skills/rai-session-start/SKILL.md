@@ -1,8 +1,10 @@
 ---
-description: 'Begin a session by loading context bundle, interpreting it, and proposing
-  work. CLI does all data plumbing; skill does inference interpretation.
-
-  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+description: Load context and propose session focus. Use at the start of every working
+  session.
 license: MIT
 metadata:
   raise.adaptable: 'true'

@@ -1,23 +1,38 @@
 ---
-description: 'Execute the implementation plan task by task, verifying each step, and
-  producing quality code that passes validation gates. Use after planning is complete.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash
+description: Execute plan tasks with TDD and validation gates. Use after story plan.
 license: MIT
 metadata:
   raise.adaptable: 'true'
+  raise.aspects: introspection
   raise.fase: '6'
   raise.frequency: per-story
   raise.gate: gate-code
   raise.inputs: '- plan_md: file_path, required, previous_skill
 
     '
+  raise.introspection:
+    affected_modules: []
+    context_source: plan doc
+    max_jit_queries: 3
+    max_tier1_queries: 3
+    phase: story.implement
+    tier1_queries:
+    - implementation patterns for {affected_modules}
+    - testing patterns for {test_type} in {language}
+    - integration patterns for {upstream_dependencies}
   raise.next: story-review
   raise.outputs: '- code_commits: list, git
 
     '
   raise.prerequisites: story-plan
-  raise.version: 2.2.0
+  raise.version: 2.4.0
   raise.visibility: public
   raise.work_cycle: story
 name: rai-story-implement
@@ -45,7 +60,18 @@ Execute the implementation plan task by task with TDD, producing verified code t
 
 ## Steps
 
+### PRIME (mandatory — do not skip)
+
+Before starting Step 1, you MUST execute the PRIME protocol:
+
+1. **Chain read**: Read story-plan's learning record at `.raise/rai/learnings/rai-story-plan/{work_id}/record.yaml`.
+2. **Graph query**: Execute tier1 queries from this skill's metadata using `rai graph query`. If graph is unavailable, note and continue.
+3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
+
 ### Step 1: Load Plan & Context
+
+> **JIT**: Before loading context, query graph for implementation patterns in affected modules
+> → `aspects/introspection.md § JIT Protocol`
 
 Load the implementation plan and query relevant patterns:
 
@@ -91,10 +117,11 @@ If verification fails: fix and re-verify (max 3 attempts before escalating).
 
 ### Step 4: Commit & Checkpoint
 
-1. Commit the completed task
-2. Update progress log (`work/epics/.../stories/{story_id}/progress.md`)
-3. Present to the human: what was completed, files changed, verification results
-4. Wait for acknowledgment before continuing
+1. Stage task files
+2. Commit the completed task
+3. Update progress log (`work/epics/.../stories/{story_id}/progress.md`)
+4. Present to the human: what was completed, files changed, verification results
+5. Wait for acknowledgment before continuing
 
 ### Step 5: Iterate or Finalize
 

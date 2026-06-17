@@ -1,10 +1,13 @@
 ---
-description: 'Chain the full story lifecycle (start → design → plan → implement →
-  architecture review → quality review → review → close) in one invocation. Resumes
-  from last completed phase using git-derived artifact detection. Delegation profile
-  controls pause behavior.
-
-  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Bash
+- Agent
+- Skill
+description: Run the full story lifecycle with delegation gates. Use to orchestrate
+  a story.
 license: MIT
 metadata:
   raise.adaptable: 'true'
@@ -200,6 +203,23 @@ ARGUMENTS: {story_id}
 - The orchestrator stays thin — it only reads summaries and checks for artifacts between forks
 - A skill invoked through fork must produce the same output as when invoked standalone
 
+**Close phase (phase 8) guardrails — MANDATORY in close agent prompt:**
+
+The close agent MUST receive these explicit constraints in its prompt, in addition to the SKILL.md:
+
+```
+## Scope Constraints (CRITICAL — close is merge-only)
+- ONLY: merge story branch, update epic scope.md, delete story branch, emit signals
+- NEVER edit source code, skill files, config files, or governance docs
+- NEVER create "fix" or "refactor" commits — report issues, do not repair them
+- NEVER delete directories, worktrees, or files outside the story branch
+- NEVER revert or modify commits already on the dev branch
+- Conflict resolution: resolve ONLY the conflicting hunks mechanically — do not audit or "correct" surrounding code
+- If something looks wrong, return it as a finding in your summary — do not act on it
+```
+
+This guardrail exists because close agents have historically rationalized unauthorized changes (removing fields, deleting directories) during conflict resolution. The close skill's "Scope Constraints" section is authoritative — these prompt guardrails reinforce it.
+
 <verification>
 Each skill's SKILL.md was loaded and all its steps executed before proceeding.
 </verification>
@@ -276,7 +296,6 @@ All phases complete. Story merged and branch cleaned up.
 | All story artifacts | `work/epics/e{N}-{name}/stories/` |
 | Merge commit | Parent branch (epic or dev) |
 | Patterns | `.raise/rai/memory/patterns.jsonl` |
-| Calibration | Via `rai signal emit-calibration` |
 | Next | Next story or `/rai-epic-close` |
 
 ## Quality Checklist
@@ -299,5 +318,5 @@ All phases complete. Story merged and branch cleaned up.
 
 - Skills: `/rai-story-start`, `/rai-story-design`, `/rai-story-plan`, `/rai-story-implement`, `/rai-architecture-review`, `/rai-quality-review`, `/rai-story-review`, `/rai-story-close`
 - Delegation: `~/.rai/developer.yaml`, S325.2
-- BacklogHook: S325.4 (fires on `rai signal emit-work` in start/close)
+- BacklogHook: S325.4
 - Design: `s325.6-design.md` (decisions D1-D2-D3)

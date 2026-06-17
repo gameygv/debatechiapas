@@ -1,12 +1,17 @@
 ---
-description: 'Create lean story specifications optimized for both human understanding
-  and AI alignment. Design is not optional (PAT-186) — use before /rai-story-plan
-  for every story to ground integration decisions.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash(rai:*)
+description: Create lean story spec for human review and AI alignment. Use before
+  story plan.
 license: MIT
 metadata:
   raise.adaptable: 'true'
+  raise.aspects: introspection
   raise.fase: '4'
   raise.frequency: per-story
   raise.gate: ''
@@ -15,6 +20,16 @@ metadata:
     - scope_md: file_path, optional, previous_skill
 
     '
+  raise.introspection:
+    affected_modules: []
+    context_source: scope doc
+    max_jit_queries: 5
+    max_tier1_queries: 3
+    phase: story.design
+    tier1_queries:
+    - patterns for {affected_modules} design decisions
+    - prior designs for similar scope in {phase}
+    - risks and lessons from related epics
   raise.next: story-plan
   raise.output_type: story-design
   raise.outputs: '- design_yaml: file_path, .raise/artifacts/
@@ -23,7 +38,7 @@ metadata:
 
     '
   raise.prerequisites: project-backlog
-  raise.version: 2.3.0
+  raise.version: 2.5.0
   raise.visibility: public
   raise.work_cycle: story
 name: rai-story-design
@@ -38,18 +53,24 @@ Create a lean story specification optimized for both human review (clear intent)
 ## Mastery Levels (ShuHaRi)
 
 - **Shu**: Follow all steps, include examples for every story
-- **Ha**: Skip optional sections for simple stories, adjust detail to complexity
+- **Ha**: Adjust depth to complexity, but never skip the gemba walk
 - **Ri**: Custom spec patterns for specialized domains
 
 ## Context
 
-**When to use:** Before planning any story that involves architectural decisions, multiple approaches, or >3 components.
-
-**When to skip:** Simple stories (<3 components, obvious implementation) → go to `/rai-story-plan`.
+**When to use:** Before planning ANY story. Design is never optional — it is the gemba walk that prevents duplicate components, wasted effort, and wrong approaches.
 
 **Inputs:** Story from backlog, User Story artifact (`story.md` from `/rai-story-start`), epic scope/design documents.
 
 ## Steps
+
+### PRIME (mandatory — do not skip)
+
+Before starting Step 1, you MUST execute the PRIME protocol:
+
+1. **Chain read**: No chain read — story-design is the first skill in the story chain.
+2. **Graph query**: Execute tier1 queries from this skill's metadata using `rai graph query`. If graph is unavailable, note and continue.
+3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
 
 ### Step 1: Assess Complexity
 
@@ -62,9 +83,12 @@ Create a lean story specification optimized for both human review (clear intent)
 
 | Result | Action |
 |--------|--------|
-| Simple | Skip design → `/rai-story-plan` |
-| Moderate | Core sections only |
-| Complex | Full spec with optional sections |
+| Simple | Lean design — core sections, quick gemba walk |
+| Moderate | Core sections + examples |
+| Complex | Full spec with all sections |
+
+> **JIT**: Before assessing complexity, query graph for patterns from similar stories
+> → `aspects/introspection.md § JIT Protocol`
 
 **Risk gate:** If story is marked HIGH RISK in epic scope, discuss risks before designing — name concerns, failure modes, and scope boundaries.
 
@@ -76,9 +100,37 @@ Create a lean story specification optimized for both human review (clear intent)
 Complexity assessed. Risk/UX/Integration gates evaluated.
 </verification>
 
-### Step 2: Frame What & Why
+### Step 2: Gemba Walk (mandatory — do not skip)
+
+Go to the actual code. Design without reading the code is guessing.
+
+1. **Read what exists**: Open and read the files/modules that this story will touch. Understand the current state before proposing changes.
+2. **Search for duplicates**: Grep for similar functionality, components, or patterns that already exist. Before creating anything new, verify it doesn't exist already.
+3. **Check best practices**: Look at how similar problems are solved in the codebase. Follow established patterns rather than inventing new ones.
+4. **Map dependencies**: Identify what depends on the code you'll change, and what the changed code depends on.
+
+```bash
+# Example gemba commands
+grep -r "similar_function" packages/  # Does this already exist?
+grep -r "class SimilarModel" packages/ # Duplicate models?
+```
+
+| Finding | Action |
+|---------|--------|
+| Similar component exists | Reuse or extend it — do NOT create a duplicate |
+| No established pattern | Document the new pattern as a design decision |
+| Multiple approaches found | List them in Step 4 with trade-offs |
+
+<verification>
+Code has been read. No duplicate components will be created. Existing patterns identified.
+</verification>
+
+### Step 3: Frame What & Why (informed by gemba)
 
 Load `story.md` (from `/rai-story-start`) if it exists — use its User Story as starting frame.
+
+> **JIT**: Before framing problem and value, query graph for prior designs with similar scope
+> → `aspects/introspection.md § JIT Protocol`
 
 - **Problem**: What gap does this fill? (1-2 sentences)
 - **Value**: Why does this matter? (1-2 sentences, measurable or observable)
@@ -87,17 +139,27 @@ Load `story.md` (from `/rai-story-start`) if it exists — use its User Story as
 Can explain to non-technical stakeholder in 30 seconds.
 </verification>
 
-### Step 3: Describe Approach
+### Step 4: Describe Approach (lean principles)
+
+> **JIT**: Before describing approach, query graph for implementation patterns in affected modules
+> → `aspects/introspection.md § JIT Protocol`
 
 Document WHAT you're building and WHY this approach (not detailed HOW):
 - Solution approach (1-2 sentences)
 - Components affected (list with change type: create/modify/delete)
 
+**Lean design gates** — challenge every component before committing:
+
+- **KISS**: Is this the simplest approach that works? If not, simplify.
+- **DRY**: Does this duplicate logic that exists elsewhere (gemba walk should have found it)?
+- **YAGNI**: Are you building for a real requirement or a hypothetical one? Cut speculative features.
+- **MVP**: What is the smallest version that delivers the value from Step 3? Build that, not more.
+
 **For refactoring:** grep all call sites of the target. A half-migration is worse than none.
 
 **For data mutations:** What happens when inputs reference missing entities? Declare the strategy explicitly: reject with error, skip + report count, partial success with warnings. Silent drops are semantic bugs.
 
-**Value preservation gate:** Before finalizing components, ask: "What domain knowledge does this layer provide that a generic pass-through wouldn't?" If the answer is "none", the design may be over-abstracted. If the answer involves config/resolution/mapping that an existing pattern handles differently, check where that responsibility lives in the proven pattern. KISS means simplest that serves the purpose — removing domain intelligence to reduce LOC removes the value proposition.
+**Value preservation gate:** Before finalizing components, ask: "What domain knowledge does this layer provide that a generic pass-through wouldn't?" If the answer is "none", the design may be over-abstracted. If the answer involves config/resolution/mapping that an existing pattern handles differently, check where that responsibility lives in the proven pattern.
 
 For complex stories, add: scenarios (Gherkin), algorithm pseudocode, constraints, testing strategy.
 
@@ -105,7 +167,7 @@ For complex stories, add: scenarios (Gherkin), algorithm pseudocode, constraints
 Approach is concrete enough to envision examples. Value preservation gate passed.
 </verification>
 
-### Step 4: Create Examples (MOST IMPORTANT)
+### Step 5: Create Examples (MOST IMPORTANT)
 
 **This section drives AI code generation accuracy more than any other.**
 
@@ -124,7 +186,10 @@ Examples are concrete, runnable, and cover success + error paths.
 Can't envision examples → approach not concrete enough, return to Step 3.
 </if-blocked>
 
-### Step 5: Define Acceptance Criteria
+### Step 6: Define Acceptance Criteria
+
+> **JIT**: Before defining acceptance criteria, query graph for testing patterns and quality standards
+> → `aspects/introspection.md § JIT Protocol`
 
 If `story.md` has Gherkin AC, reference them here — refine, don't duplicate. If no `story.md`, define from scratch:
 
@@ -188,6 +253,8 @@ Write the design as `work/epics/e{N}-{name}/stories/s{N}.{M}-design.md` — colo
 ## Quality Checklist
 
 - [ ] Complexity assessed — design depth matches complexity
+- [ ] Gemba walk done — actual code read, duplicates checked, patterns identified
+- [ ] Lean gates passed: KISS, DRY, YAGNI, MVP — simplest version that delivers value
 - [ ] What & Why clear in <2 minutes
 - [ ] Examples are concrete and runnable (100% coverage)
 - [ ] Acceptance criteria specific and testable (3-5 MUST items)

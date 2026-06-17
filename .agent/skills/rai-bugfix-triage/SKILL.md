@@ -1,7 +1,8 @@
 ---
 allowed-tools:
 - Read
-- Bash(rai:*)
+- Edit
+- Write
 description: Classify bug in 4 dimensions and set Jira custom fields. Phase 2 of bugfix
   pipeline.
 license: MIT
@@ -45,17 +46,11 @@ Classify the bug in 4 orthogonal dimensions (ODC-inspired) and persist classific
 
 **When to skip:** Never — triage is mandatory. Even trivial bugs need classification for queryable data.
 
-**Inputs:** Bug ID, `work/bugs/{issue_key}/scope.md` without TRIAGE block.
+**Inputs:** Bug ID, `work/bugs/RAISE-{N}/scope.md` without TRIAGE block.
 
 **Expected state:** On bug branch. Scope artifact exists and bug reproduces.
 
 ## Steps
-
-### Step 0: Instrument
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event start --phase triage 2>/dev/null || true
-```
 
 ### Step 1: Classify in 4 Dimensions
 
@@ -68,83 +63,46 @@ Classify the bug **before any analysis** — classify what you see, not what you
 | **Origin** | Requirements, Design, Code, Integration, Environment |
 | **Qualifier** | Missing, Incorrect, Extraneous |
 
-Append the TRIAGE block to `work/bugs/{issue_key}/scope.md` via CLI (preserves existing content + publishes to Confluence):
+Append to `work/bugs/RAISE-{N}/scope.md`:
 
-```bash
-rai docs write bugfix-scope \
-  --title "{issue_key}: scope+triage" \
-  --stdin \
-  --output-path work/bugs/{issue_key}/scope.md << EOF
-$(cat work/bugs/{issue_key}/scope.md)
-
-TRIAGE:
-  Bug Type:    {Functional|Interface|Data|Logic|Configuration|Regression}
-  Severity:    {S0-Critical|S1-High|S2-Medium|S3-Low}
-  Origin:      {Requirements|Design|Code|Integration|Environment}
-  Qualifier:   {Missing|Incorrect|Extraneous}
-EOF
 ```
-
-Note: unquoted heredoc so `$(cat ...)` expands the existing file content.
+TRIAGE:
+  Bug Type:    [Functional|Interface|Data|Logic|Configuration|Regression]
+  Severity:    [S0-Critical|S1-High|S2-Medium|S3-Low]
+  Origin:      [Requirements|Design|Code|Integration|Environment]
+  Qualifier:   [Missing|Incorrect|Extraneous]
+```
 
 <verification>
 4 dimensions classified in scope artifact.
 </verification>
 
-### Step 2: Resolve and Set Jira Custom Fields
+### Step 2: Set Jira Custom Fields
 
-#### 2a — Resolve field IDs from config
+Update Jira — set the 4 classification custom fields via MCP. Map Severity to Jira format (`S{N}-Label` → `Sev-{N}`) and Origin Environment → `Enviroment` (Jira typo):
 
-```bash
-rai backlog fields list --format agent
+```
+mcp__atlassian__jira_update_issue(
+  issue_key = "RAISE-{N}",
+  additional_fields = '{"customfield_13267": {"value": "{Bug Type}"}, "customfield_12090": {"value": "Sev-{N}"}, "customfield_13269": {"value": "{Origin}"}, "customfield_13270": {"value": "{Qualifier}"}}'
+)
 ```
 
-Output format: `name|id|issue_type|context_name|is_global|values` (one line per field context).
-
-Determine `bug.issue_type`: read `Issue Type:` field from `work/bugs/{issue_key}/scope.md`,
-or run `rai backlog get {issue_key}` and read the issue type from the output.
-
-Parse the output: filter lines where the third column matches `{bug.issue_type}`, deduplicate by name, build a map:
-`{ "Bug Type": "<id>", "Severity": "<id>", "Origin": "<id>", "Qualifier": "<id>" }`
-
-**If no pipe-delimited lines match `{bug.issue_type}`** (`custom_fields.{bug.issue_type}` not configured):
-- Skip step 2b entirely
-- Append to TRIAGE block: `Jira fields: not set — run rai-backlog-setup and add custom_fields.{bug.issue_type}`
-- Continue to Step 3
-
-#### 2b — Set fields via CLI (only when configured)
-
-Apply value mappings (Jira quirks):
-- Severity: `S0-Critical → Sev-0`, `S1-High → Sev-1`, `S2-Medium → Sev-2`, `S3-Low → Sev-3`
-- Origin: `Environment → Enviroment` (Jira typo — one `n`)
-- Fields absent from config output: skip silently
-
-```bash
-rai backlog update {issue_key} \
-  --field {bug_type_id}="{Bug Type}" \
-  --field {severity_id}="Sev-{N}" \
-  --field {origin_id}="{Origin}" \
-  --field {qualifier_id}="{Qualifier}"
-```
-
-Select fields are auto-wrapped by the CLI — no need to pass `{"value": "..."}` manually.
-
-> **Field names looked up:** `"Bug Type"`, `"Severity"`, `"Origin"`, `"Qualifier"` (issue type: `{bug.issue_type}`).
-> Field IDs are resolved at runtime from `backlog.yaml` via `rai backlog fields list` — never hardcoded.
+> **Field IDs:** Bug Type = `customfield_13267`, Severity = `customfield_12090`, Origin = `customfield_13269`, Qualifier = `customfield_13270`.
 
 <verification>
-Jira fields set using IDs from config, or step skipped with note if not configured.
+Jira fields set.
 </verification>
 
 <if-blocked>
-Adapter not configured or update fails → log warning and continue. Field classification is best-effort.
+MCP not available → set fields manually in Jira UI.
 </if-blocked>
 
 ### Step 3: Commit Classification
 
 ```bash
-git add work/bugs/{issue_key}/scope.md
-git commit -m "bug({issue_key}): triage — {Bug Type}/{Severity}/{Origin}/{Qualifier}
+git add work/bugs/RAISE-{N}/scope.md
+git commit -m "bug(RAISE-{N}): triage — {Bug Type}/{Severity}/{Origin}/{Qualifier}
 
 Co-Authored-By: Rai <rai@humansys.ai>"
 ```
@@ -157,19 +115,15 @@ Triage committed. All 4 dimensions in scope artifact AND Jira.
 
 **This gate is mandatory** — all 4 dimensions must be classified before advancing to Analyse. If uncertain about Origin, use your best hypothesis — it can be revised during Analyse.
 
-Present classification for human active verification before proceeding to Analyse.
+When invoked via orchestrator (`/rai-bugfix-run`), the orchestrator presents classification for human active verification before proceeding.
 
 ## Output
 
 | Item | Destination |
 |------|-------------|
-| TRIAGE block | Appended to `work/bugs/{issue_key}/scope.md` |
+| TRIAGE block | Appended to `work/bugs/RAISE-{N}/scope.md` |
 | Jira custom fields | 4 fields set via MCP |
 | Next | `/rai-bugfix-analyse` |
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event complete --phase triage 2>/dev/null || true
-```
 
 ## Quality Checklist
 
@@ -183,5 +137,4 @@ rai signal emit-work bugfix "{bug_id}" --event complete --phase triage 2>/dev/nu
 
 - Previous: `/rai-bugfix-start`
 - Next: `/rai-bugfix-analyse`
-- Field IDs: resolved at runtime from `rai backlog fields list --format agent`
-- Field names looked up: `"Bug Type"`, `"Severity"`, `"Origin"`, `"Qualifier"` (context: `bug`)
+- Jira field IDs: `customfield_13267` (Bug Type), `customfield_12090` (Severity), `customfield_13269` (Origin), `customfield_13270` (Qualifier)

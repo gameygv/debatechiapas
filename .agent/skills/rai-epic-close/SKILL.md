@@ -1,13 +1,18 @@
 ---
-description: 'Complete an epic with retrospective, metrics capture, push to origin,
-  merge request creation, and tracking update. Epics are logical containers — stories
-  merge locally to dev during story-close, then epic-close pushes dev and creates
-  the MR.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash(rai:*)
+- Bash(git:*)
+description: Close epic with retrospective, push, and merge request. Use after all
+  stories done.
 license: MIT
 metadata:
   raise.adaptable: 'true'
+  raise.aspects: introspection
   raise.fase: '9'
   raise.frequency: per-epic
   raise.gate: ''
@@ -18,6 +23,15 @@ metadata:
     - dev_branch: string, required, config
 
     '
+  raise.introspection:
+    affected_modules: []
+    context_source: all epic artifacts
+    max_jit_queries: 3
+    max_tier1_queries: 2
+    phase: epic.close
+    tier1_queries:
+    - retrospective patterns for {domain} epics
+    - process improvement patterns from similar epics
   raise.next: ''
   raise.outputs: '- retrospective: file_path, file
 
@@ -25,7 +39,7 @@ metadata:
 
     '
   raise.prerequisites: all stories complete
-  raise.version: 3.0.0
+  raise.version: 3.2.0
   raise.visibility: public
   raise.work_cycle: epic
 name: rai-epic-close
@@ -55,6 +69,14 @@ Complete an epic by conducting a retrospective, tagging the milestone, and updat
 
 ## Steps
 
+### PRIME (mandatory — do not skip)
+
+Before starting Step 1, you MUST execute the PRIME protocol:
+
+1. **Chain read**: Read ALL learning records from this epic's skills (epic-design, epic-plan, and all story records). This provides the aggregate view for the retrospective.
+2. **Graph query**: Execute tier1 queries from this skill's metadata using `rai graph query`. If graph is unavailable, note and continue.
+3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
+
 ### Step 1: Verify Stories Complete
 
 Check all stories are done in the epic scope document:
@@ -67,6 +89,9 @@ grep -E "^\s*-\s*\[ \]" "work/epics/e{N}-{name}/scope.md"
 |-----------|--------|
 | All stories checked | Continue |
 | Incomplete stories | Complete them first or explicitly descope |
+
+> **JIT**: Before descoping decisions, query graph for completion patterns and prior descoping outcomes
+> → `aspects/introspection.md § JIT Protocol`
 
 <verification>
 All stories marked complete in epic scope.
@@ -92,6 +117,9 @@ Determine which test command to run using this priority chain:
 | Unknown | — | Ask developer |
 
 The table is a **fallback** — `project.test_command` always wins when present.
+
+> **JIT**: Before writing retrospective, query graph for process improvement patterns from similar epics
+> → `aspects/introspection.md § JIT Protocol`
 
 Create retrospective at `work/epics/e{N}-{name}/retrospective.md` using `templates/retrospective.md`. Fill from story retrospectives and git history.
 
@@ -177,14 +205,8 @@ Dev pushed to origin. MR created if targeting main. MR URL presented to develope
 1. Mark epic complete via CLI:
    - **If Jira issue exists:** `rai backlog transition {JIRA_KEY} "Done" -a jira`
    - **If no Jira key:** `rai backlog search "summary ~ '{epic name}'" -a jira` to find it, then transition
-2. Emit telemetry:
-
-```bash
-rai signal emit-work epic E{N} --event complete
-```
-
 <verification>
-Backlog reflects completion. Local context updated.
+Backlog reflects completion.
 </verification>
 
 ## Output

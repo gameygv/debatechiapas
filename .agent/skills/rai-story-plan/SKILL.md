@@ -1,12 +1,15 @@
 ---
-description: 'Decompose user stories into atomic executable tasks, identify dependencies,
-  and create a deterministic implementation plan. Use after /rai-story-design has
-  grounded the story''s integration decisions.
-
-  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Bash(rai:*)
+description: Decompose story into atomic tasks with TDD verification. Use after story
+  design.
 license: MIT
 metadata:
   raise.adaptable: 'true'
+  raise.aspects: introspection
   raise.fase: '5'
   raise.frequency: per-story
   raise.gate: gate-plan
@@ -15,12 +18,22 @@ metadata:
     - story_md: file_path, required, story-start
 
     '
+  raise.introspection:
+    affected_modules: []
+    context_source: design doc
+    max_jit_queries: 2
+    max_tier1_queries: 3
+    phase: story.plan
+    tier1_queries:
+    - decomposition patterns for {complexity} stories
+    - TDD patterns for {affected_modules}
+    - estimation calibration for {size} stories
   raise.next: story-implement
   raise.outputs: '- plan_md: file_path, next_skill
 
     '
   raise.prerequisites: project-backlog
-  raise.version: 2.1.0
+  raise.version: 2.3.0
   raise.visibility: public
   raise.work_cycle: story
 name: rai-story-plan
@@ -48,11 +61,22 @@ Decompose a story into atomic executable tasks with dependencies, verification c
 
 ## Steps
 
+### PRIME (mandatory — do not skip)
+
+Before starting Step 1, you MUST execute the PRIME protocol:
+
+1. **Chain read**: Read story-design's learning record at `.raise/rai/learnings/rai-story-design/{work_id}/record.yaml`. Enrich story-design's record with `downstream: {plan_derivable: bool, tasks_clear: bool}`.
+2. **Graph query**: Execute tier1 queries from this skill's metadata using `rai graph query`. If graph is unavailable, note and continue.
+3. **Present**: Surface retrieved patterns as context. 0 results is valid — not a failure.
+
 ### Step 1: Verify Design
 
 ```bash
 ls work/epics/e*/stories/{story_id}-design.md 2>/dev/null || echo "INFO: No design"
 ```
+
+> **JIT**: Before verifying design completeness, query graph for complexity assessment patterns
+> → `aspects/introspection.md § JIT Protocol`
 
 | Condition | Action |
 |-----------|--------|
@@ -89,6 +113,9 @@ Each task is atomic and verifiable. Final integration test included.
 </verification>
 
 ### Step 3: Order & Dependencies
+
+> **JIT**: Before ordering dependencies, query graph for risk-first ordering patterns
+> → `aspects/introspection.md § JIT Protocol`
 
 - Map dependencies (sequential vs parallel)
 - Apply risk-first ordering (riskiest tasks early)

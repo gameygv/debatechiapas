@@ -2,6 +2,7 @@
 allowed-tools:
 - Read
 - Edit
+- Write
 - Grep
 - Glob
 - Bash
@@ -48,17 +49,11 @@ Determine the root cause of the bug and decide a fix approach. Select the analys
 
 **When to skip:** XS bugs where cause is self-evident — but still write `analysis.md` documenting the obvious cause.
 
-**Inputs:** Bug ID, `work/bugs/{issue_key}/scope.md` with TRIAGE block.
+**Inputs:** Bug ID, `work/bugs/RAISE-{N}/scope.md` with TRIAGE block.
 
 **Expected state:** On bug branch. Scope with triage exists. Bug reproduces.
 
 ## Steps
-
-### Step 0: Instrument
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event start --phase analyse 2>/dev/null || true
-```
 
 ### Step 1: Select Method Based on Available Signals
 
@@ -104,29 +99,11 @@ Root cause unclear after analysis → document top 2 hypotheses, escalate to hum
 
 ### Step 3: Write Analysis Artifact
 
-Publish `work/bugs/{issue_key}/analysis.md` via CLI with: method used, root cause, evidence, and fix approach:
+Write `work/bugs/RAISE-{N}/analysis.md` with: method used, root cause, evidence, and fix approach.
 
 ```bash
-rai docs write bugfix-analysis \
-  --title "{issue_key}: analysis" \
-  --stdin \
-  --output-path work/bugs/{issue_key}/analysis.md << 'EOF'
-## Method: {method used}
-
-### Root Cause
-{root cause}
-
-### Evidence
-{evidence supporting root cause}
-
-### Fix Approach
-{one line}
-EOF
-```
-
-```bash
-git add work/bugs/{issue_key}/analysis.md
-git commit -m "bug({issue_key}): analyse — root cause identified
+git add work/bugs/RAISE-{N}/analysis.md
+git commit -m "bug(RAISE-{N}): analyse — root cause identified
 
 Method: {method used}
 Root cause: {one line}
@@ -143,13 +120,8 @@ Analysis artifact committed with method, root cause, and fix approach.
 
 | Item | Destination |
 |------|-------------|
-| Analysis | `work/bugs/{issue_key}/analysis.md` |
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event complete --phase analyse 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
+| Analysis | `work/bugs/RAISE-{N}/analysis.md` |
+| Next | `/rai-bugfix-plan` |
 
 ## Quality Checklist
 

@@ -1,6 +1,7 @@
 ---
 allowed-tools:
 - Read
+- Write
 - Bash(rai:*)
 description: Retrospective, pattern extraction, and process improvement. Phase 6 of
   bugfix pipeline.
@@ -53,12 +54,6 @@ Verify the fix addresses root cause, extract process improvements and causal pat
 
 ## Steps
 
-### Step 0: Instrument
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event start --phase review 2>/dev/null || true
-```
-
 ### Step 1: Heutagogical Checkpoint
 
 Answer with specific examples:
@@ -69,16 +64,18 @@ Answer with specific examples:
 
 ### Step 2: Extract Patterns & Process Improvements
 
-**Add patterns** worth preserving using `raise_pattern_add` MCP tool with content="{causal insight}", context="{keywords}", pattern_type="process", from_story="{issue_key}".
+**Add patterns** worth preserving (causal insights, recurring failure modes):
 
-Types: `process`, `technical`, `architecture`, `codebase`.
-
-**Reinforce behavioral patterns** loaded at session start using `raise_pattern_reinforce` MCP tool with pattern_id={pattern_id}, vote={1|0|-1}, from_story="{issue_key}".
-
-If MCP tools are not available, fall back to:
 ```bash
-rai pattern add "{causal insight}" --context "{keywords}" --type process --scope project --from {issue_key}
-rai pattern reinforce {pattern_id} --vote {1|0|-1} --from {issue_key}
+rai pattern add "{causal insight}" --context "{keywords}" --type process --scope project --from RAISE-{N}
+```
+
+Types: `process`, `technical`, `architecture`, `codebase`. Use `--scope project` — bug insights are codebase-specific.
+
+**Reinforce behavioral patterns** loaded at session start:
+
+```bash
+rai pattern reinforce {pattern_id} --vote {1|0|-1} --from RAISE-{N}
 ```
 
 | Vote | Meaning |
@@ -94,14 +91,10 @@ rai pattern reinforce {pattern_id} --vote {1|0|-1} --from {issue_key}
 
 ### Step 3: Write Retrospective
 
-Publish `work/bugs/{issue_key}/retro.md` via CLI:
+Write `work/bugs/RAISE-{N}/retro.md`:
 
-```bash
-rai docs write bugfix-retro \
-  --title "{issue_key}: retrospective" \
-  --stdin \
-  --output-path work/bugs/{issue_key}/retro.md << 'EOF'
-## Retrospective: {issue_key}
+```markdown
+## Retrospective: RAISE-{N}
 
 ### Summary
 - Root cause: {one line}
@@ -121,14 +114,13 @@ rai docs write bugfix-retro \
 ### Patterns
 - Added: {pattern IDs or "none"}
 - Reinforced: {pattern IDs and votes, or "none evaluated"}
-EOF
 ```
 
 Commit:
 
 ```bash
-git add work/bugs/{issue_key}/retro.md
-git commit -m "bug({issue_key}): review — retro and patterns
+git add work/bugs/RAISE-{N}/retro.md
+git commit -m "bug(RAISE-{N}): review — retro and patterns
 
 Co-Authored-By: Rai <rai@humansys.ai>"
 ```
@@ -141,24 +133,9 @@ Retro written. Patterns added/reinforced.
 
 | Item | Destination |
 |------|-------------|
-| Retrospective | `work/bugs/{issue_key}/retro.md` |
+| Retrospective | `work/bugs/RAISE-{N}/retro.md` |
 | Patterns | `.raise/rai/memory/patterns.jsonl` |
-
-Transition bug to ready status before signaling completion (non-blocking):
-```bash
-rai backlog statuses list --issue-type Bug
-```
-Infer ready status: `category=indeterminate` + name contains Ready, Approved, Listo, Merge.
-Single candidate → transition silently. Multiple or ambiguous → ask developer. None → skip silently.
-```bash
-rai backlog transition {bug_key} {ready_slug}
-```
-
-```bash
-rai signal emit-work bugfix "{bug_id}" --event complete --phase review 2>/dev/null || true
-```
-
-**STOP HERE.** Return your summary to the orchestrator. Do NOT invoke any further skill.
+| Next | `/rai-bugfix-close` |
 
 ## Quality Checklist
 

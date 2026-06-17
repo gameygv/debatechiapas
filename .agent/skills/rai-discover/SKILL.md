@@ -1,9 +1,13 @@
 ---
-description: 'Run the full codebase discovery pipeline: detect languages, extract
-  symbols, describe components, generate architecture docs, and build the knowledge
-  graph.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash(rai:*)
+description: Scan codebase, extract symbols, and build knowledge graph. Use for codebase
+  discovery.
 license: MIT
 metadata:
   raise.adaptable: 'true'

@@ -1,9 +1,13 @@
 ---
-description: 'Systematic root cause analysis using lean methods (5 Whys, Ishikawa,
-  Gemba). Use when encountering unexpected behavior, errors, or defects to find and
-  fix the true root cause rather than symptoms.
-
-  '
+allowed-tools:
+- Read
+- Edit
+- Write
+- Grep
+- Glob
+- Bash
+description: Find root cause using 5 Whys, Ishikawa, Gemba. Use when encountering
+  errors or defects.
 license: MIT
 metadata:
   raise.adaptable: 'true'
